@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Painel independente de acompanhamento dos resultados oficiais do TSE nas Eleições 2026.">
+  <title>Painel TSE 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Painel TSE 2026</h1>
+        <div class="sub">Presidente • Lula × Flávio por UF • Senado 1º/2º por UF</div>
+      </div>
+      <div class="actions">
+        <button id="refresh" type="button">Atualizar agora</button>
+        <div class="status"><span id="dot" class="dot"></span><span id="statusText">Conectando…</span></div>
+      </div>
+    </div>
+    <div class="meta-grid">
+      <div class="meta"><div class="k">Seções totalizadas — Brasil</div><div class="v" id="progress">—</div></div>
+      <div class="meta"><div class="k">Geração TSE</div><div class="v" id="tseTime">—</div></div>
+      <div class="meta"><div class="k">Última consulta</div><div class="v" id="fetchTime">—</div></div>
+      <div class="meta"><div class="k">Próxima atualização</div><div class="v" id="countdown">—</div></div>
+    </div>
+    <div id="errors" class="errors"></div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="section-head">
+      <h2>Presidente — cenário geral</h2>
+      <span class="hint">Lula e Flávio + todos os demais candidatos acima de 1,00%</span>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Candidato</th><th>Partido</th><th class="num">Votos</th><th class="num">% válidos</th></tr></thead>
+        <tbody id="presBody"><tr><td colspan="4" class="msg">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Lula × Flávio — por estado</h2>
+      <span class="hint"><span class="legend lula"></span>Lula líder &nbsp; <span class="legend flavio"></span>Flávio líder</span>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr>
+          <th>UF</th><th class="num">Lula %</th><th class="num">Flávio %</th>
+          <th class="num">Diferença</th><th class="num">Seções totalizadas</th>
+        </tr></thead>
+        <tbody id="stateBody"><tr><td colspan="5" class="msg">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Senado — 1º e 2º colocados por estado</h2>
+      <span class="hint">Posição corrente na apuração</span>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr>
+          <th>UF</th><th>1º colocado</th><th>Partido</th><th class="num">%</th>
+          <th>2º colocado</th><th>Partido</th><th class="num">%</th>
+          <th class="num">Seções totalizadas</th>
+        </tr></thead>
+        <tbody id="senBody"><tr><td colspan="8" class="msg">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Fonte: arquivos JSON oficiais do Tribunal Superior Eleitoral (TSE). Painel independente; não faz projeções nem previsões.
+    Atualização automática a cada <span id="pollLabel">15</span> segundos.
+  </footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

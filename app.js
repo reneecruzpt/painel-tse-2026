@@ -128,6 +128,7 @@ function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
 
 function syncTable(tbodyId,rows,keyFn,cellsFn){
   const tbody=$(tbodyId);
+  tbody.querySelectorAll("tr:not([data-key])").forEach(tr=>tr.remove());
   const existing=new Map([...tbody.querySelectorAll("tr[data-key]")].map(tr=>[tr.dataset.key,tr]));
   if(!rows.length){ tbody.innerHTML=`<tr><td colspan="20" class="msg">Nenhum registro corresponde aos filtros.</td></tr>`; return; }
   const wanted=new Set();
@@ -293,12 +294,14 @@ async function incrementalLoad(force=false){
 let loading=false,remaining=POLL_SECONDS;
 async function load({force=false}={}){
   if(loading) return;
+  const firstRun=!model.initialized;
   loading=true; $("refresh").disabled=true; setStatus("wait","Consultando TSE…");
   try{
     const changed=model.initialized?await incrementalLoad(force):await initialLoad();
     model.lastQueryAt=new Date(); if(changed>0||!model.lastChangeAt) model.lastChangeAt=new Date();
     renderAll();
-    if(changed>0){ const text=model.initialized?`Dados atualizados · ${changed} conjunto(s) alterado(s)`:"Dados carregados"; setStatus("ok",text); announce(text); }
+    if(firstRun){ setStatus("ok","Dados carregados"); announce("Dados carregados."); }
+    else if(changed>0){ const text=`Dados atualizados · ${changed} conjunto(s) alterado(s)`; setStatus("ok",text); announce(text); }
     else { const t=model.lastChangeAt?.toLocaleTimeString("pt-BR")||model.lastQueryAt.toLocaleTimeString("pt-BR"); setStatus("ok",`Sem alteração desde ${t}`); }
   }catch(e){
     model.errors.push(e.message||String(e)); model.lastQueryAt=new Date(); renderErrors(); renderMeta();

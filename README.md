@@ -27,3 +27,15 @@ O projeto é 100% estático (`index.html`, `style.css`, `app.js`) e é publicado
 Dados obtidos dos arquivos JSON oficiais em `https://resultados.tse.jus.br`.
 
 Este projeto é independente e não faz projeções, previsões ou recomendações eleitorais.
+
+
+## Vaga matematicamente garantida no Senado
+
+Durante a totalização parcial, o painel pode exibir `🔒 Vaga garantida` para o 1º ou 2º colocado. É um cálculo conservador, separado da atribuição oficial do TSE:
+
+- usa os votos absolutos atuais do candidato;
+- usa os votos atuais do 3º colocado;
+- usa `e.esnt`, o eleitorado das seções ainda não totalizadas;
+- considera a vaga garantida somente quando `votos do candidato > votos do 3º + eleitorado restante`.
+
+Assim, mesmo no cenário extremo em que cada eleitor ainda não totalizado desse um voto ao 3º colocado e nenhum ao candidato, o 3º não conseguiria alcançá-lo. O selo `✓ Eleito TSE` continua reservado ao campo oficial `cand.e = "s"`.

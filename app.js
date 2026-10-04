@@ -295,7 +295,8 @@ let loading=false,remaining=POLL_SECONDS,paused=false;
 function applyPauseState({announceChange=true}={}){
   const button=$("pauseUpdates");
   button.setAttribute("aria-pressed",String(paused));
-  button.textContent=paused?"Retomar atualizações":"Pausar atualizações";
+  button.setAttribute("aria-label",paused?"Retomar atualizações automáticas":"Pausar atualizações automáticas");
+  button.innerHTML=paused?'<span class="control-icon" aria-hidden="true">▶</span><span class="control-label">Retomar</span>':'<span class="control-icon" aria-hidden="true">⏸</span><span class="control-label">Pausar</span>';
   button.title=paused?"Retoma as atualizações automáticas":"Pausa as atualizações automáticas sem alterar os dados na tela";
   if(paused){
     $("countdown").textContent="pausadas";

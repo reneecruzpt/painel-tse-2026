@@ -2,6 +2,7 @@ const BASE = "https://resultados.tse.jus.br/oficial/ele2026";
 const ELEICAO_PRESIDENTE = 6257;
 const ELEICAO_ESTADUAL = 6259;
 const CARGO_PRESIDENTE = 1;
+const CARGO_GOVERNADOR = 3;
 const CARGO_SENADOR = 5;
 const POLL_SECONDS = 15;
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
@@ -76,6 +77,12 @@ function parseStatePresident(data){
   const c=flattenCandidates(data),lula=matchCandidate(c,["LULA"]),flavio=matchCandidate(c,["FLAVIO","FLAVIO BOLSONARO"]);
   return {lula:compact(lula),flavio:compact(flavio),diff:(lula&&flavio)?lula.pct-flavio.pct:null,progress:sectionsPct(data),idg:data.idg??null};
 }
+function parseGovernor(data){
+  const c=flattenCandidates(data);
+  const first=compact(c[0]),second=compact(c[1]),third=compact(c[2]);
+  const gap=(second&&third)?Math.max(0,second.pct-third.pct):null;
+  return {first,second,third,gap,md:String(data.md||"n").toLowerCase(),progress:sectionsPct(data),idg:data.idg??null};
+}
 function parseSenate(data){
   const c=flattenCandidates(data);
   const first=compact(c[0]),second=compact(c[1]),third=compact(c[2]);
@@ -102,9 +109,11 @@ function trackerMap(data){
 const model={
   national:null,
   states:new Map(),
+  governors:new Map(),
   senate:new Map(),
   trackers:{pres:new Map(),senate:new Map()},
   pendingPres:new Set(),
+  pendingGovernor:new Set(),
   pendingSenate:new Set(),
   pendingNational:false,
   initialized:false,
@@ -134,6 +143,13 @@ function leaderText(diff){
   return "Empate";
 }
 function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
+function governorBadge(row,position){
+  const c=position===1?row.first:position===2?row.second:row.third;
+  if(c?.elected) return '<span class="elected-badge" title="Condição de eleito atribuída oficialmente pelo TSE">✓ Eleito TSE</span>';
+  if(row.md==="e"&&position===1) return '<span class="math-official-badge" title="O TSE informa md=e: eleição matematicamente definida com eleito no 1º turno">🔒 Eleito matematicamente</span>';
+  if(row.md==="s"&&(position===1||position===2)) return '<span class="runoff-badge" title="O TSE informa md=s: eleição matematicamente definida para segundo turno">↪ 2º turno definido</span>';
+  return "";
+}
 function seatBadge(c){
   if(c?.elected) return '<span class="elected-badge" title="Condição de eleito atribuída oficialmente pelo TSE">✓ Eleito TSE</span>';
   if(c?.mathGuaranteed) return '<span class="math-badge" title="Cálculo conservador do painel: os votos atuais superam o máximo que o 3º colocado alcançaria mesmo recebendo um voto de cada eleitor ainda em seção não totalizada. Não substitui a atribuição oficial do TSE.">🔒 Vaga garantida</span>';
@@ -194,6 +210,23 @@ function renderPresident(){
     {html:`<div class="pct-wrap"><span class="pct-bar" style="--w:${clamp(c.pct,0,100)}%"></span><span class="pct-value">${fmtPct(c.pct)}</span></div>`,value:c.pct,className:"num"}
   ]);
 }
+function renderGovernors(){
+  const rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",progress:null})}));
+  syncTable("govBody",rows,r=>r.uf,r=>[
+    {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}`,label:"1º colocado"},
+    {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
+    {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${governorBadge(r,2)}`,value:`${candidateKey(r.second)}|${r.md}`,label:"2º colocado"},
+    {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
+    {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
+    {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora da faixa"},
+    {html:r.third?party(r.third.party):"—",value:r.third?.party,className:"outside-seat",label:"Partido"},
+    {html:r.third?fmtPct(r.third.pct):"—",value:r.third?.pct,className:"num outside-seat",label:"%"},
+    {html:r.gap===null||r.gap===undefined?"—":`<span class="gap-to-seat">${fmtPct(r.gap).replace("%"," p.p.")}</span>`,value:r.gap,className:"num outside-seat",label:"Distância para o 2º"},
+    {html:fmtPct(r.progress),value:r.progress,className:"num",label:"Seções totalizadas"}
+  ]);
+}
 function renderStates(){
   const rows=visibleStates();
   $("stateCount").textContent=`${rows.length} ${rows.length===1?"UF":"UFs"}`;
@@ -237,12 +270,18 @@ function renderErrors(){
   if(model.errors.length){ box.style.display="block"; box.textContent=`Falha temporária em ${model.errors.length} consulta(s). Quando já havia dado carregado, a última leitura foi mantida.`; box.title=model.errors.slice(0,6).join("\n"); }
   else { box.style.display="none"; box.textContent=""; box.removeAttribute("title"); }
 }
-function renderAll(){ renderMeta(); renderPresident(); renderStates(); renderSenate(); renderErrors(); }
+function renderAll(){ renderMeta(); renderPresident(); renderGovernors(); renderStates(); renderSenate(); renderErrors(); }
 
 async function fetchPresidentUF(uf){
   const old=model.states.get(uf);
   const data=await getJson(resultUrl(uf,CARGO_PRESIDENTE,ELEICAO_PRESIDENTE));
   const next=parseStatePresident(data); model.states.set(uf,next);
+  return !old||old.idg!==next.idg;
+}
+async function fetchGovernorUF(uf){
+  const old=model.governors.get(uf);
+  const data=await getJson(resultUrl(uf,CARGO_GOVERNADOR,ELEICAO_ESTADUAL));
+  const next=parseGovernor(data); model.governors.set(uf,next);
   return !old||old.idg!==next.idg;
 }
 async function fetchSenateUF(uf){
@@ -267,7 +306,7 @@ function detectChanges(next){
     for(const [code,item] of next.pres){ if(prevP.get(code)?.signature!==item.signature){ if(code==="BR") model.pendingNational=true; else if(UFS.includes(code)) model.pendingPres.add(code); } }
   }
   if(prevS.size){
-    for(const [code,item] of next.senate){ if(prevS.get(code)?.signature!==item.signature&&UFS.includes(code)) model.pendingSenate.add(code); }
+    for(const [code,item] of next.senate){ if(prevS.get(code)?.signature!==item.signature&&UFS.includes(code)){ model.pendingGovernor.add(code); model.pendingSenate.add(code); } }
   }
   model.trackers=next;
 }
@@ -276,24 +315,24 @@ async function initialLoad(){
   model.errors=[];
   const trackerPromise=refreshTrackers().catch(e=>{model.errors.push(e.message);return null;});
   await fetchNational();
-  const tasks=UFS.flatMap(uf=>[{kind:"pres",uf},{kind:"senate",uf}]);
+  const tasks=UFS.flatMap(uf=>[{kind:"pres",uf},{kind:"governor",uf},{kind:"senate",uf}]);
   let changed=0;
   await mapLimit(tasks,8,async task=>{
-    try{ const c=task.kind==="pres"?await fetchPresidentUF(task.uf):await fetchSenateUF(task.uf); if(c) changed++; }
+    try{ const c=task.kind==="pres"?await fetchPresidentUF(task.uf):task.kind==="governor"?await fetchGovernorUF(task.uf):await fetchSenateUF(task.uf); if(c) changed++; }
     catch(e){ model.errors.push(e.message); }
   });
   const trackers=await trackerPromise; if(trackers) model.trackers=trackers;
-  model.pendingNational=false; model.pendingPres.clear(); model.pendingSenate.clear(); model.initialized=true;
+  model.pendingNational=false; model.pendingPres.clear(); model.pendingGovernor.clear(); model.pendingSenate.clear(); model.initialized=true;
   return changed;
 }
 async function incrementalLoad(force=false){
   model.errors=[];
   if(force){
     let changed=(await fetchNational())?1:0;
-    const tasks=UFS.flatMap(uf=>[{kind:"pres",uf},{kind:"senate",uf}]);
-    await mapLimit(tasks,8,async task=>{ try{ const c=task.kind==="pres"?await fetchPresidentUF(task.uf):await fetchSenateUF(task.uf); if(c) changed++; }catch(e){model.errors.push(e.message);} });
+    const tasks=UFS.flatMap(uf=>[{kind:"pres",uf},{kind:"governor",uf},{kind:"senate",uf}]);
+    await mapLimit(tasks,8,async task=>{ try{ const c=task.kind==="pres"?await fetchPresidentUF(task.uf):task.kind==="governor"?await fetchGovernorUF(task.uf):await fetchSenateUF(task.uf); if(c) changed++; }catch(e){model.errors.push(e.message);} });
     const trackers=await refreshTrackers().catch(e=>{model.errors.push(e.message);return null;}); if(trackers) model.trackers=trackers;
-    model.pendingNational=false; model.pendingPres.clear(); model.pendingSenate.clear(); return changed;
+    model.pendingNational=false; model.pendingPres.clear(); model.pendingGovernor.clear(); model.pendingSenate.clear(); return changed;
   }
 
   const trackers=await refreshTrackers();
@@ -303,8 +342,9 @@ async function incrementalLoad(force=false){
     try{ const c=await fetchNational(); if(c){changed++;model.pendingNational=false;} }
     catch(e){model.errors.push(e.message);}
   }
-  const pufs=[...model.pendingPres],sufs=[...model.pendingSenate];
+  const pufs=[...model.pendingPres],gufs=[...model.pendingGovernor],sufs=[...model.pendingSenate];
   await mapLimit(pufs,6,async uf=>{ try{ const c=await fetchPresidentUF(uf); if(c){changed++;model.pendingPres.delete(uf);} }catch(e){model.errors.push(e.message);} });
+  await mapLimit(gufs,6,async uf=>{ try{ const c=await fetchGovernorUF(uf); if(c){changed++;model.pendingGovernor.delete(uf);} }catch(e){model.errors.push(e.message);} });
   await mapLimit(sufs,6,async uf=>{ try{ const c=await fetchSenateUF(uf); if(c){changed++;model.pendingSenate.delete(uf);} }catch(e){model.errors.push(e.message);} });
   return changed;
 }

@@ -80,7 +80,14 @@ function parseSenate(data){
   const c=flattenCandidates(data);
   const first=compact(c[0]),second=compact(c[1]),third=compact(c[2]);
   const gap=(second&&third)?Math.max(0,second.pct-third.pct):null;
-  return {first,second,third,gap,progress:sectionsPct(data),idg:data.idg??null};
+  const remainingRaw=data.e?.esnt;
+  const remainingElectors=(remainingRaw===null||remainingRaw===undefined||remainingRaw==="")?null:asNumber(remainingRaw);
+  if(third&&remainingElectors!==null){
+    const maxChallengerVotes=third.votes+remainingElectors;
+    if(first) first.mathGuaranteed=first.votes>maxChallengerVotes;
+    if(second) second.mathGuaranteed=second.votes>maxChallengerVotes;
+  }
+  return {first,second,third,gap,remainingElectors,progress:sectionsPct(data),idg:data.idg??null};
 }
 function trackerMap(data){
   const m=new Map();
@@ -127,7 +134,11 @@ function leaderText(diff){
   return "Empate";
 }
 function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
-function electedBadge(c){ return c?.elected?'<span class="elected-badge" title="Condição de eleito atribuída pelo TSE">✓ Eleito</span>':""; }
+function seatBadge(c){
+  if(c?.elected) return '<span class="elected-badge" title="Condição de eleito atribuída oficialmente pelo TSE">✓ Eleito TSE</span>';
+  if(c?.mathGuaranteed) return '<span class="math-badge" title="Cálculo conservador do painel: os votos atuais superam o máximo que o 3º colocado alcançaria mesmo recebendo um voto de cada eleitor ainda em seção não totalizada. Não substitui a atribuição oficial do TSE.">🔒 Vaga garantida</span>';
+  return "";
+}
 
 function syncTable(tbodyId,rows,keyFn,cellsFn){
   const tbody=$(tbodyId);
@@ -199,10 +210,10 @@ function renderSenate(){
   const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
   syncTable("senBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
-    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${electedBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito":"nao"}`,label:"1º colocado"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${seatBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito-tse":r.first?.mathGuaranteed?"garantida":"aberta"}`,label:"1º colocado"},
     {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
     {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
-    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${electedBadge(r.second)}`,value:`${candidateKey(r.second)}|${r.second?.elected?"eleito":"nao"}`,label:"2º colocado"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${seatBadge(r.second)}`,value:`${candidateKey(r.second)}|${r.second?.elected?"eleito-tse":r.second?.mathGuaranteed?"garantida":"aberta"}`,label:"2º colocado"},
     {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
     {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
     {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora das vagas"},

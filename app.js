@@ -210,10 +210,17 @@ function renderPresident(){
     {html:`<div class="pct-wrap"><span class="pct-bar" style="--w:${clamp(c.pct,0,100)}%"></span><span class="pct-value">${fmtPct(c.pct)}</span></div>`,value:c.pct,className:"num"}
   ]);
 }
+function governorStatus(row){
+  if(row.md==="s") return '<span class="governor-status runoff">↪ 2º turno</span>';
+  if(row.md==="e") return '<span class="governor-status decided">🔒 1º turno definido</span>';
+  if(row.first?.elected) return '<span class="governor-status decided">✓ Eleito TSE</span>';
+  return '<span class="governor-status">Em apuração</span>';
+}
 function renderGovernors(){
   const rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",progress:null})}));
   syncTable("govBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
+    {html:governorStatus(r),value:r.md,label:"Situação"},
     {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}`,label:"1º colocado"},
     {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
     {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},

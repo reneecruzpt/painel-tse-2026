@@ -50,7 +50,7 @@ function flattenCandidates(data){
   const rows=[];
   for(const cargo of (data.carg||[])) for(const agr of (cargo.agr||[])) for(const par of (agr.par||[])) for(const cand of (par.cand||[])){
     const pct=(cand.pvapn!==null&&cand.pvapn!==undefined&&cand.pvapn!=="")?cand.pvapn:cand.pvap;
-    rows.push({name:cand.nmu||cand.nm||"",full_name:cand.nm||"",party:par.sg||"",number:cand.n,votes:Math.trunc(asNumber(cand.vap)),pct:asNumber(pct),status:cand.st||""});
+    rows.push({name:cand.nmu||cand.nm||"",full_name:cand.nm||"",party:par.sg||"",number:cand.n,votes:Math.trunc(asNumber(cand.vap)),pct:asNumber(pct),status:cand.st||"",elected:String(cand.e||"n").toLowerCase()==="s"});
   }
   return rows.sort((a,b)=>(b.votes-a.votes)||(b.pct-a.pct));
 }
@@ -67,7 +67,7 @@ function matchCandidate(candidates,aliases){
   for(const field of ["name","full_name"]) for(const c of candidates){ const n=normalize(c[field]); if(a.some(x=>n.includes(x))) return c; }
   return null;
 }
-const compact = c => c ? {name:c.name,party:c.party,votes:c.votes,pct:c.pct,status:c.status} : null;
+const compact = c => c ? {name:c.name,party:c.party,votes:c.votes,pct:c.pct,status:c.status,elected:!!c.elected} : null;
 function parsePresident(data){
   const all=flattenCandidates(data),lula=matchCandidate(all,["LULA"]),flavio=matchCandidate(all,["FLAVIO","FLAVIO BOLSONARO"]);
   return {all,lula,flavio,meta:generationInfo(data)};
@@ -127,6 +127,7 @@ function leaderText(diff){
   return "Empate";
 }
 function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
+function electedBadge(c){ return c?.elected?'<span class="elected-badge" title="Condição de eleito atribuída pelo TSE">✓ Eleito</span>':""; }
 
 function syncTable(tbodyId,rows,keyFn,cellsFn){
   const tbody=$(tbodyId);
@@ -198,10 +199,10 @@ function renderSenate(){
   const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
   syncTable("senBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
-    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>`,value:candidateKey(r.first),label:"1º colocado"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${electedBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito":"nao"}`,label:"1º colocado"},
     {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
     {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
-    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>`,value:candidateKey(r.second),label:"2º colocado"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${electedBadge(r.second)}`,value:`${candidateKey(r.second)}|${r.second?.elected?"eleito":"nao"}`,label:"2º colocado"},
     {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
     {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
     {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora das vagas"},

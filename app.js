@@ -291,16 +291,36 @@ async function incrementalLoad(force=false){
   return changed;
 }
 
-let loading=false,remaining=POLL_SECONDS;
-async function load({force=false}={}){
+let loading=false,remaining=POLL_SECONDS,paused=false;
+function applyPauseState({announceChange=true}={}){
+  const button=$("pauseUpdates");
+  button.setAttribute("aria-pressed",String(paused));
+  button.textContent=paused?"Retomar atualizações":"Pausar atualizações";
+  button.title=paused?"Retoma as atualizações automáticas":"Pausa as atualizações automáticas sem alterar os dados na tela";
+  if(paused){
+    $("countdown").textContent="pausadas";
+    if(!loading) setStatus("wait","Atualizações pausadas");
+    if(announceChange) announce("Atualizações automáticas pausadas. Os dados permanecerão fixos até você retomar ou verificar manualmente.");
+  }else{
+    remaining=POLL_SECONDS;
+    $("countdown").textContent=remaining+" s";
+    if(model.initialized){ renderAll(); setStatus("ok","Atualizações retomadas"); }
+    if(announceChange) announce("Atualizações automáticas retomadas.");
+  }
+}
+async function load({force=false,manual=false}={}){
   if(loading) return;
   const firstRun=!model.initialized;
   loading=true; $("refresh").disabled=true; setStatus("wait","Consultando TSE…");
   try{
     const changed=model.initialized?await incrementalLoad(force):await initialLoad();
     model.lastQueryAt=new Date(); if(changed>0||!model.lastChangeAt) model.lastChangeAt=new Date();
-    renderAll();
-    if(firstRun){ setStatus("ok","Dados carregados"); announce("Dados carregados."); }
+    const freezeAutomaticResult=paused&&!manual&&!firstRun;
+    if(!freezeAutomaticResult) renderAll();
+    if(paused){
+      if(manual){ const text=changed>0?`Verificado · ${changed} conjunto(s) alterado(s) · pausado`:"Verificado · sem alteração · pausado"; setStatus("wait",text); announce(text); }
+      else setStatus("wait","Atualizações pausadas");
+    }else if(firstRun){ setStatus("ok","Dados carregados"); announce("Dados carregados."); }
     else if(changed>0){ const text=`Dados atualizados · ${changed} conjunto(s) alterado(s)`; setStatus("ok",text); announce(text); }
     else { const t=model.lastChangeAt?.toLocaleTimeString("pt-BR")||model.lastQueryAt.toLocaleTimeString("pt-BR"); setStatus("ok",`Sem alteração desde ${t}`); }
   }catch(e){
@@ -330,7 +350,8 @@ function initControls(){
   $("progressFilter").addEventListener("click",()=>{prefs.progressed=!prefs.progressed;persistFilters();syncFilterControls();renderStates();});
   $("resetFilters").addEventListener("click",()=>{prefs.region="ALL";prefs.close=false;prefs.progressed=false;persistFilters();syncFilterControls();renderStates();});
   document.querySelectorAll(".sort-btn").forEach(b=>b.addEventListener("click",()=>{const key=b.dataset.sort;if(prefs.sortKey===key)prefs.sortDir=prefs.sortDir==="asc"?"desc":"asc";else{prefs.sortKey=key;prefs.sortDir=key==="uf"?"asc":"desc";}persistFilters();renderStates();}));
-  $("refresh").addEventListener("click",()=>{remaining=0;load();});
+  $("pauseUpdates").addEventListener("click",()=>{paused=!paused;applyPauseState();});
+  $("refresh").addEventListener("click",()=>{remaining=0;load({manual:true});});
 }
 function initTheme(){
   const saved=localStorage.getItem("tse.theme"); const dark=saved?saved==="dark":window.matchMedia?.("(prefers-color-scheme: dark)").matches;
@@ -342,6 +363,11 @@ function applyTheme(theme){
 }
 
 $("pollLabel").textContent=POLL_SECONDS;
-initTheme(); initControls(); syncFilterControls(); updateSortIndicators();
-setInterval(()=>{ if(!loading) remaining--; if(remaining<=0){remaining=POLL_SECONDS;load();} $("countdown").textContent=loading?"consultando…":Math.max(0,remaining)+" s"; },1000);
+initTheme(); initControls(); syncFilterControls(); updateSortIndicators(); applyPauseState({announceChange:false});
+setInterval(()=>{
+  if(paused){ $("countdown").textContent="pausadas"; return; }
+  if(!loading) remaining--;
+  if(remaining<=0){remaining=POLL_SECONDS;load();}
+  $("countdown").textContent=loading?"consultando…":Math.max(0,remaining)+" s";
+},1000);
 load();

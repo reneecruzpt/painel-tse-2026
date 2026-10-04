@@ -16,7 +16,7 @@
       <div class="brand">
         <div class="eyebrow">Eleições 2026 · dados oficiais</div>
         <h1>Painel TSE 2026</h1>
-        <div class="sub">Presidente • Governadores • Lula × Flávio por UF • Senado 1º/2º/3º por UF</div>
+        <div class="sub">Presidente • Lula × Flávio por UF • Governadores • Senado 1º/2º/3º por UF</div>
       </div>
       <div class="actions">
         <button id="themeToggle" class="icon-button" type="button" aria-pressed="false">Tema escuro</button>
@@ -64,28 +64,6 @@
     </div>
   </section>
 
-  <section class="panel" aria-labelledby="gov-title">
-    <div class="section-head">
-      <div>
-        <h2 id="gov-title">Governadores — 1º, 2º e 3º colocados por estado</h2>
-        <p class="section-note">1º e 2º acompanham a faixa do eventual 2º turno; <span class="legend outside"></span>3º aparece em vermelho como fora dessa faixa no momento. <span class="runoff-badge demo">↪ 2º turno definido</span> e <span class="math-official-badge demo">🔒 Eleito matematicamente</span> usam o campo oficial <code>md</code> do TSE.</p>
-      </div>
-      <span class="data-badge">1 vaga / UF</span>
-    </div>
-    <div class="tablebox governor-box">
-      <table class="governor-table">
-        <caption class="sr-only">Primeiro, segundo e terceiro colocados para Governador em cada unidade da federação</caption>
-        <thead><tr>
-          <th scope="col">UF</th><th scope="col">1º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
-          <th scope="col">2º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
-          <th scope="col">3º colocado · fora</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
-          <th scope="col" class="num">Dist. p/ 2º</th><th scope="col" class="num">Seções totalizadas</th>
-        </tr></thead>
-        <tbody id="govBody"><tr><td colspan="12" class="msg">Carregando…</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
   <section class="panel" aria-labelledby="states-title">
     <div class="section-head state-head">
       <div>
@@ -124,6 +102,28 @@
           <th scope="col" class="num" data-sort-th="progress"><button class="sort-btn" type="button" data-sort="progress">Seções totalizadas <span class="sort-indicator" aria-hidden="true"></span></button></th>
         </tr></thead>
         <tbody id="stateBody"><tr><td colspan="5" class="msg">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="gov-title">
+    <div class="section-head">
+      <div>
+        <h2 id="gov-title">Governadores — 1º, 2º e 3º colocados por estado</h2>
+        <p class="section-note">1º e 2º acompanham a faixa do eventual 2º turno; <span class="legend outside"></span>3º aparece em vermelho como fora dessa faixa no momento. <span class="runoff-badge demo">↪ 2º turno definido</span> e <span class="math-official-badge demo">🔒 Eleito matematicamente</span> usam o campo oficial <code>md</code> do TSE.</p>
+      </div>
+      <span class="data-badge">1 vaga / UF</span>
+    </div>
+    <div class="tablebox governor-box">
+      <table class="governor-table">
+        <caption class="sr-only">Primeiro, segundo e terceiro colocados para Governador em cada unidade da federação</caption>
+        <thead><tr>
+          <th scope="col">UF</th><th scope="col">1º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
+          <th scope="col">2º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
+          <th scope="col">3º colocado · fora</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
+          <th scope="col" class="num">Dist. p/ 2º</th><th scope="col" class="num">Seções totalizadas</th>
+        </tr></thead>
+        <tbody id="govBody"><tr><td colspan="12" class="msg">Carregando…</td></tr></tbody>
       </table>
     </div>
   </section>

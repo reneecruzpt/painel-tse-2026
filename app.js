@@ -78,7 +78,9 @@ function parseStatePresident(data){
 }
 function parseSenate(data){
   const c=flattenCandidates(data);
-  return {first:compact(c[0]),second:compact(c[1]),progress:sectionsPct(data),idg:data.idg??null};
+  const first=compact(c[0]),second=compact(c[1]),third=compact(c[2]);
+  const gap=(second&&third)?Math.max(0,second.pct-third.pct):null;
+  return {first,second,third,gap,progress:sectionsPct(data),idg:data.idg??null};
 }
 function trackerMap(data){
   const m=new Map();
@@ -193,7 +195,7 @@ function renderStates(){
   updateSortIndicators();
 }
 function renderSenate(){
-  const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,progress:null})}));
+  const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
   syncTable("senBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
     {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>`,value:candidateKey(r.first),label:"1º colocado"},
@@ -202,6 +204,10 @@ function renderSenate(){
     {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>`,value:candidateKey(r.second),label:"2º colocado"},
     {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
     {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
+    {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora das vagas"},
+    {html:r.third?party(r.third.party):"—",value:r.third?.party,className:"outside-seat",label:"Partido"},
+    {html:r.third?fmtPct(r.third.pct):"—",value:r.third?.pct,className:"num outside-seat",label:"%"},
+    {html:r.gap===null||r.gap===undefined?"—":`<span class="gap-to-seat">${fmtPct(r.gap).replace("%"," p.p.")}</span>`,value:r.gap,className:"num outside-seat",label:"Distância para o 2º"},
     {html:fmtPct(r.progress),value:r.progress,className:"num",label:"Seções totalizadas"}
   ]);
 }

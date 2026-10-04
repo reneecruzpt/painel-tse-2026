@@ -16,7 +16,7 @@
       <div class="brand">
         <div class="eyebrow">Eleições 2026 · dados oficiais</div>
         <h1>Painel TSE 2026</h1>
-        <div class="sub">Presidente • Lula × Flávio por UF • Senado 1º/2º por UF</div>
+        <div class="sub">Presidente • Lula × Flávio por UF • Senado 1º/2º/3º por UF</div>
       </div>
       <div class="actions">
         <button id="themeToggle" class="icon-button" type="button" aria-pressed="false">Tema escuro</button>
@@ -109,20 +109,21 @@
   <section class="panel" aria-labelledby="sen-title">
     <div class="section-head">
       <div>
-        <h2 id="sen-title">Senado — 1º e 2º colocados por estado</h2>
-        <p class="section-note">Posição corrente na apuração. O partido aparece junto de cada candidatura.</p>
+        <h2 id="sen-title">Senado — 1º, 2º e 3º colocados por estado</h2>
+        <p class="section-note">1º e 2º estão na faixa das duas vagas; <span class="legend outside"></span>3º aparece em vermelho como fora das vagas no momento, com a distância para o 2º.</p>
       </div>
       <span class="data-badge">2 vagas / UF</span>
     </div>
     <div class="tablebox senate-box">
       <table class="senate-table">
-        <caption class="sr-only">Primeiro e segundo colocados para o Senado em cada unidade da federação</caption>
+        <caption class="sr-only">Primeiro, segundo e terceiro colocados para o Senado em cada unidade da federação</caption>
         <thead><tr>
           <th scope="col">UF</th><th scope="col">1º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
           <th scope="col">2º colocado</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
-          <th scope="col" class="num">Seções totalizadas</th>
+          <th scope="col">3º colocado · fora</th><th scope="col">Partido</th><th scope="col" class="num">%</th>
+          <th scope="col" class="num">Dist. p/ 2º</th><th scope="col" class="num">Seções totalizadas</th>
         </tr></thead>
-        <tbody id="senBody"><tr><td colspan="8" class="msg">Carregando…</td></tr></tbody>
+        <tbody id="senBody"><tr><td colspan="12" class="msg">Carregando…</td></tr></tbody>
       </table>
     </div>
   </section>

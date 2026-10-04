@@ -75,7 +75,7 @@ function parsePresident(data){
 }
 function parseStatePresident(data){
   const c=flattenCandidates(data),lula=matchCandidate(c,["LULA"]),flavio=matchCandidate(c,["FLAVIO","FLAVIO BOLSONARO"]);
-  return {lula:compact(lula),flavio:compact(flavio),diff:(lula&&flavio)?lula.pct-flavio.pct:null,progress:sectionsPct(data),idg:data.idg??null};
+  return {lula:compact(lula),flavio:compact(flavio),diff:(lula&&flavio)?lula.pct-flavio.pct:null,diffVotes:(lula&&flavio)?lula.votes-flavio.votes:null,progress:sectionsPct(data),idg:data.idg??null};
 }
 function parseGovernor(data){
   const c=flattenCandidates(data);
@@ -142,6 +142,13 @@ function leaderText(diff){
   if(x<0) return `<span class="leader-name"><span class="leader-arrow" aria-hidden="true">▲</span>Flávio +${m} p.p.</span>`;
   return "Empate";
 }
+function leaderVotesText(diffVotes){
+  if(diffVotes===null||diffVotes===undefined) return "—";
+  const x=Number(diffVotes),m=Math.abs(x).toLocaleString("pt-BR");
+  if(x>0) return `<span class="leader-name"><span class="leader-arrow" aria-hidden="true">▲</span>Lula +${m}</span>`;
+  if(x<0) return `<span class="leader-name"><span class="leader-arrow" aria-hidden="true">▲</span>Flávio +${m}</span>`;
+  return "Empate";
+}
 function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
 function governorBadge(row,position){
   const c=position===1?row.first:position===2?row.second:row.third;
@@ -185,7 +192,7 @@ function syncTable(tbodyId,rows,keyFn,cellsFn){
 }
 
 function visibleStates(){
-  let rows=UFS.map(uf=>({uf,...(model.states.get(uf)||{lula:null,flavio:null,diff:null,progress:null})}));
+  let rows=UFS.map(uf=>({uf,...(model.states.get(uf)||{lula:null,flavio:null,diff:null,diffVotes:null,progress:null})}));
   if(prefs.region!=="ALL") rows=rows.filter(r=>REGIONS[prefs.region]?.has(r.uf));
   if(prefs.close) rows=rows.filter(r=>r.diff!==null&&Math.abs(r.diff)<5);
   if(prefs.progressed) rows=rows.filter(r=>Number(r.progress)>=50);
@@ -242,6 +249,7 @@ function renderStates(){
     {html:r.lula?fmtPct(r.lula.pct):"—",value:r.lula?.pct,className:`num ${leaderClass(r.diff,"lula")}`.trim()},
     {html:r.flavio?fmtPct(r.flavio.pct):"—",value:r.flavio?.pct,className:`num ${leaderClass(r.diff,"flavio")}`.trim()},
     {html:leaderText(r.diff),value:r.diff,className:`num ${diffClass(r.diff)}`.trim()},
+    {html:leaderVotesText(r.diffVotes),value:r.diffVotes,className:`num ${diffClass(r.diffVotes)}`.trim()},
     {html:fmtPct(r.progress),value:r.progress,className:"num"}
   ]);
   updateSortIndicators();

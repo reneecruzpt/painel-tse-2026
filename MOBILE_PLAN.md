@@ -9,7 +9,11 @@ Este documento define a próxima etapa de evolução do Painel TSE 2026: uma exp
   - navegação mobile convertida em abas: Presidente, Lula × Flávio, Governadores e Senado;
   - Lula × Flávio convertido em cartões por UF no mobile;
   - cartões de Governadores e Senado reorganizados para leitura em linhas de candidatos.
-- **Fase 2 — interação: pendente**
+- **Fase 2 — interação: implementada**
+  - filtros mobile com alvos de toque maiores e regiões em faixa horizontal rolável;
+  - seletor compacto de ordenação para Lula × Flávio, com direção crescente/decrescente;
+  - Pausar/Retomar, Verificar agora, abas e filtros com alvos mínimos de aproximadamente 44 px;
+  - posição de leitura preservada durante atualizações automáticas e ao retomar a apuração.
 - **Fase 3 — acabamento: pendente**
 - **Fase 4 — performance e acessibilidade: pendente**
 

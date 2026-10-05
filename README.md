@@ -55,7 +55,7 @@ O painel exibe, por UF, os três primeiros colocados para Governador logo após 
 
 ## Encerramento automático do polling
 
-O painel interrompe as consultas automáticas somente quando a apuração relevante chegou a 100% e a totalização final oficial foi registrada pelo TSE (`tf=s`): no arquivo nacional para Presidente e nos arquivos estaduais de Governador e Senado. Depois disso, ainda são exigidas três verificações consecutivas sem alterações. Com intervalo de 15 segundos, isso representa cerca de 45 segundos adicionais de estabilidade.
+O painel interrompe as consultas automáticas somente quando todas as seções relevantes chegaram a 100% e o arquivo de acompanhamento EA14 confirma `and=f` (totalização finalizada) no Brasil para Presidente e em todas as UFs para a eleição estadual. Antes de encerrar, o painel também espera os EA20 de Governador e Senado refletirem `and=f`, evitando parar durante a pequena defasagem que pode existir entre os arquivos distribuídos pela CDN. Depois disso, ainda são exigidas três verificações consecutivas sem alterações. Com intervalo de 15 segundos, isso representa cerca de 45 segundos adicionais de estabilidade.
 
 Após o encerramento, o status passa a indicar `Apuração concluída` e o botão `Verificar agora` continua disponível para uma conferência manual. Se uma conferência manual detectar nova alteração ou algum total voltar a ficar abaixo de 100%, o polling automático é reativado.
 
@@ -84,3 +84,8 @@ Os nomes são usados apenas para descobrir os candidatos no arquivo nacional. De
 ## Próxima etapa: mobile
 
 O plano de otimização para telemóveis está documentado em [MOBILE_PLAN.md](MOBILE_PLAN.md). A implementação será feita de forma incremental, preservando a lógica de dados e o comportamento da versão desktop.
+
+
+### Sincronização da finalização
+
+EA14 e EA20 são produzidos e distribuídos em paralelo. Quando o EA14 já informa `and=f` mas um EA20 ainda aparece como parcial, o painel mantém aquele cargo/UF na fila de retry até o EA20 também refletir a finalização. Enquanto isso, o status informa explicitamente que 100% das seções foi atingido e que a totalização final do TSE ainda está sendo aguardada.

@@ -328,10 +328,10 @@ function renderPresident(){
   const keep=new Set([lula,flavio].filter(Boolean).map(c=>`${c.name}|${c.party}|${c.number}`));
   const rows=all.filter(c=>c.pct>1||keep.has(`${c.name}|${c.party}|${c.number}`));
   syncTable("presBody",rows,c=>`${c.name}|${c.party}`,c=>[
-    {html:`<strong>${candidateName(c)}</strong>`,value:c.name},
-    {html:party(c.party),value:c.party},
-    {html:fmtInt(c.votes),value:c.votes,className:"num"},
-    {html:`<div class="pct-wrap"><span class="pct-bar" style="--w:${clamp(c.pct,0,100)}%"></span><span class="pct-value">${fmtPct(c.pct)}</span></div>`,value:c.pct,className:"num"}
+    {html:`<strong>${candidateName(c)}</strong>`,value:c.name,label:"Candidato"},
+    {html:party(c.party),value:c.party,label:"Partido"},
+    {html:fmtInt(c.votes),value:c.votes,className:"num",label:"Votos"},
+    {html:`<div class="pct-wrap"><span class="pct-bar" style="--w:${clamp(c.pct,0,100)}%"></span><span class="pct-value">${fmtPct(c.pct)}</span></div>`,value:c.pct,className:"num",label:"% válidos"}
   ]);
 }
 function governorStatus(row){

@@ -353,12 +353,12 @@ function renderStates(){
   const rows=visibleStates();
   $("stateCount").textContent=`${rows.length} ${rows.length===1?"UF":"UFs"}`;
   syncTable("stateBody",rows,r=>r.uf,r=>[
-    {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf},
-    {html:r.lula?fmtPct(r.lula.pct):"—",value:r.lula?.pct,className:`num ${leaderClass(r.diff,"lula")}`.trim()},
-    {html:r.flavio?fmtPct(r.flavio.pct):"—",value:r.flavio?.pct,className:`num ${leaderClass(r.diff,"flavio")}`.trim()},
-    {html:leaderText(r.diff),value:r.diff,className:`num ${diffClass(r.diff)}`.trim()},
-    {html:leaderVotesText(r.diffVotes),value:r.diffVotes,className:`num ${diffClass(r.diffVotes)}`.trim()},
-    {html:fmtPct(r.progress),value:r.progress,className:"num"}
+    {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
+    {html:r.lula?fmtPct(r.lula.pct):"—",value:r.lula?.pct,className:`num ${leaderClass(r.diff,"lula")}`.trim(),label:"Lula"},
+    {html:r.flavio?fmtPct(r.flavio.pct):"—",value:r.flavio?.pct,className:`num ${leaderClass(r.diff,"flavio")}`.trim(),label:"Flávio"},
+    {html:leaderText(r.diff),value:r.diff,className:`num ${diffClass(r.diff)}`.trim(),label:"Diferença %"},
+    {html:leaderVotesText(r.diffVotes),value:r.diffVotes,className:`num ${diffClass(r.diffVotes)}`.trim(),label:"Diferença de votos"},
+    {html:fmtPct(r.progress),value:r.progress,className:"num",label:"Seções"}
   ]);
   updateSortIndicators();
 }

@@ -698,3 +698,53 @@ select{max-width:100%}
   }
   .governor-status{font-size:8.5px}
 }
+
+
+/* Mobile Phase 4 — performance and accessibility */
+button,a,select{touch-action:manipulation}
+select:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  outline-offset:2px;
+}
+main[aria-busy="true"] .mobile-tab-panel{
+  cursor:progress;
+}
+
+/* Stronger state boundaries help when color perception or contrast settings differ. */
+.governor-table td.candidate-elected,.senate-table td.candidate-elected{
+  border-top-color:color-mix(in srgb,var(--ok) 45%,var(--line));
+}
+.governor-table td.candidate-runoff{
+  border-top-color:var(--result-runoff-line);
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  .state-share-bar::before,.progress-bar,.pct-bar{
+    transition:none!important;
+  }
+  .cell-flash{animation:none!important}
+}
+
+@media(forced-colors:active){
+  .mobile-tab[aria-selected="true"],
+  .chip[aria-pressed="true"],
+  .governor-status,
+  .elected-badge,.math-badge,.runoff-badge,.math-official-badge{
+    border:2px solid CanvasText;
+  }
+  .candidate-elected,.candidate-runoff,.outside-seat{
+    outline:1px solid CanvasText;
+    outline-offset:-1px;
+  }
+  .progress-bar,.state-share-bar::before{
+    forced-color-adjust:auto;
+  }
+}
+
+@media(prefers-contrast:more){
+  .panel,.meta,.status,.section-filter select,.mobile-sort-controls select,
+  .primary-button,.icon-button,.chip,.sort-direction-button{
+    border-width:2px;
+  }
+}

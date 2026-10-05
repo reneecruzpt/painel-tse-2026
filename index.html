@@ -47,14 +47,14 @@
 </header>
 
 <main id="conteudo">
-  <nav class="mobile-nav" aria-label="Navegação rápida">
-    <a href="#presidente">Presidente</a>
-    <a href="#estados">Lula × Flávio</a>
-    <a href="#governadores">Governadores</a>
-    <a href="#senado">Senado</a>
+  <nav class="mobile-nav" role="tablist" aria-label="Seções do painel">
+    <a id="tab-presidente" class="mobile-tab" role="tab" href="#presidente" aria-controls="presidente" aria-selected="true" data-tab-target="presidente">Presidente</a>
+    <a id="tab-estados" class="mobile-tab" role="tab" href="#estados" aria-controls="estados" aria-selected="false" data-tab-target="estados">Lula × Flávio</a>
+    <a id="tab-governadores" class="mobile-tab" role="tab" href="#governadores" aria-controls="governadores" aria-selected="false" data-tab-target="governadores">Governadores</a>
+    <a id="tab-senado" class="mobile-tab" role="tab" href="#senado" aria-controls="senado" aria-selected="false" data-tab-target="senado">Senado</a>
   </nav>
 
-  <section id="presidente" class="panel" aria-labelledby="pres-title">
+  <section id="presidente" class="panel mobile-tab-panel" aria-labelledby="pres-title" data-mobile-panel="presidente">
     <div class="section-head">
       <div>
         <h2 id="pres-title">Presidente — cenário geral</h2>
@@ -71,7 +71,7 @@
     </div>
   </section>
 
-  <section id="estados" class="panel" aria-labelledby="states-title">
+  <section id="estados" class="panel mobile-tab-panel" aria-labelledby="states-title" data-mobile-panel="estados">
     <div class="section-head state-head">
       <div>
         <h2 id="states-title">Lula × Flávio — por estado</h2>
@@ -114,7 +114,7 @@
     </div>
   </section>
 
-  <section id="governadores" class="panel" aria-labelledby="gov-title">
+  <section id="governadores" class="panel mobile-tab-panel" aria-labelledby="gov-title" data-mobile-panel="governadores">
     <div class="section-head">
       <div>
         <h2 id="gov-title">Governadores — 1º, 2º e 3º colocados por estado</h2>
@@ -143,7 +143,7 @@
     </div>
   </section>
 
-  <section id="senado" class="panel" aria-labelledby="sen-title">
+  <section id="senado" class="panel mobile-tab-panel" aria-labelledby="sen-title" data-mobile-panel="senado">
     <div class="section-head">
       <div>
         <h2 id="sen-title">Senado — 1º, 2º e 3º colocados por estado</h2>

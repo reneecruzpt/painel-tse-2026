@@ -333,3 +333,110 @@ html[data-theme="dark"] .governor-table td.candidate-runoff{
 @media(min-width:761px){
   .mobile-tab-panel[hidden]{display:block!important}
 }
+
+
+/* Mobile Phase 2 — interaction */
+.mobile-sort-controls{display:none}
+
+@media(max-width:760px){
+  .actions .primary-button,.actions .icon-button{
+    min-height:44px;
+  }
+  .mobile-nav .mobile-tab{
+    min-height:44px;
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  .filters{
+    gap:8px;
+    padding:8px 11px;
+  }
+  .region-filter-group{
+    width:100%;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overscroll-behavior-inline:contain;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .region-filter-group::-webkit-scrollbar{display:none}
+  .region-filter-group .filter-label{
+    width:auto;
+    flex:0 0 auto;
+  }
+  .region-filter-group .chip{
+    flex:0 0 auto;
+  }
+  .highlight-filter-group{
+    gap:7px;
+  }
+  .highlight-filter-group .filter-label{
+    width:100%;
+  }
+  .filters .chip,.filters .text-button{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .mobile-sort-controls{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr) 44px;
+    gap:8px;
+    align-items:center;
+    padding:8px 11px;
+    border-bottom:1px solid var(--line);
+    background:var(--card-2);
+  }
+  .mobile-sort-controls label{
+    font-size:10px;
+    color:var(--muted);
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.055em;
+  }
+  .mobile-sort-controls select{
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    padding:7px 30px 7px 9px;
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    background:var(--card);
+    color:var(--ink);
+    font:inherit;
+  }
+  .sort-direction-button{
+    width:44px;
+    height:44px;
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    background:var(--card);
+    color:var(--ink);
+    font-size:18px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .mobile-sort-controls select:focus-visible,.sort-direction-button:focus-visible{
+    outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);
+    outline-offset:2px;
+  }
+
+  .section-filter select,.section-filter .text-button{
+    min-height:44px;
+  }
+}
+
+@media(max-width:480px){
+  .actions .primary-button,.actions .icon-button{
+    min-height:44px;
+  }
+  .mobile-sort-controls{
+    grid-template-columns:1fr 44px;
+  }
+  .mobile-sort-controls label{
+    grid-column:1/-1;
+  }
+}

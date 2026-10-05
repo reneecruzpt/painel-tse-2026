@@ -6,7 +6,7 @@ Este documento define a próxima etapa de evolução do Painel TSE 2026: uma exp
 
 - **Fase 1 — estrutura: implementada**
   - cabeçalho mobile compactado;
-  - navegação rápida por âncoras adicionada;
+  - navegação mobile convertida em abas: Presidente, Lula × Flávio, Governadores e Senado;
   - Lula × Flávio convertido em cartões por UF no mobile;
   - cartões de Governadores e Senado reorganizados para leitura em linhas de candidatos.
 - **Fase 2 — interação: pendente**
@@ -44,16 +44,16 @@ Proposta:
 
 Meta: toda a área de status deve caber em aproximadamente 160–190 px de altura em um aparelho comum.
 
-### 2. Navegação rápida entre seções
+### 2. Navegação por abas no mobile
 
-Adicionar uma pequena barra de navegação mobile, com âncoras:
+A barra mobile funciona como um conjunto de abas:
 
 - Presidente
 - Lula × Flávio
 - Governadores
 - Senado
 
-A barra pode usar botões/chips com `scrollIntoView` ou links de âncora nativos. Não deve criar SPA, roteamento ou estado adicional.
+Somente a seção ativa fica visível em telas de até 760 px. O desktop continua exibindo todas as seções em sequência. A aba ativa é refletida no hash da URL (`#presidente`, `#estados`, `#governadores`, `#senado`), de modo que recarregar ou compartilhar a URL preserva a seção escolhida.
 
 ### 3. Presidente
 

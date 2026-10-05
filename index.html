@@ -22,7 +22,7 @@
         <button id="themeToggle" class="icon-button" type="button" aria-pressed="false">Tema escuro</button>
         <button id="pauseUpdates" class="icon-button pause-button" type="button" aria-pressed="false" aria-label="Pausar atualizações automáticas" title="Pausa as atualizações automáticas sem alterar os dados na tela"><span class="control-icon" aria-hidden="true">⏸</span><span class="control-label">Pausar</span></button>
         <button id="refresh" class="primary-button" type="button" title="Verifica no TSE o que mudou desde a última leitura">Verificar agora</button>
-        <div class="status" role="status" aria-live="polite">
+        <div class="status" role="status" aria-live="polite" aria-atomic="true">
           <span id="dot" class="dot"></span>
           <span id="statusText">Conectando…</span>
         </div>
@@ -46,7 +46,7 @@
   </div>
 </header>
 
-<main id="conteudo">
+<main id="conteudo" tabindex="-1" aria-busy="true">
   <nav class="mobile-nav" role="tablist" aria-label="Seções do painel">
     <a id="tab-presidente" class="mobile-tab" role="tab" href="#presidente" aria-controls="presidente" aria-selected="true" data-tab-target="presidente">Presidente</a>
     <a id="tab-estados" class="mobile-tab" role="tab" href="#estados" aria-controls="estados" aria-selected="false" data-tab-target="estados">Lula × Flávio</a>

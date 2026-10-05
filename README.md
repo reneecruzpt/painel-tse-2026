@@ -79,3 +79,8 @@ Se o usuário pausar enquanto uma consulta automática já estiver em andamento,
 ## Identificação de Lula e Flávio por UF
 
 Os nomes são usados apenas para descobrir os candidatos no arquivo nacional. Depois disso, o painel guarda a identidade canônica de cada candidatura e, nos arquivos por UF, procura primeiro pelo número do candidato e depois pelo sequencial oficial (`cand.seq`). Comparação textual fica apenas como fallback de segurança.
+
+
+## Próxima etapa: mobile
+
+O plano de otimização para telemóveis está documentado em [MOBILE_PLAN.md](MOBILE_PLAN.md). A implementação será feita de forma incremental, preservando a lógica de dados e o comportamento da versão desktop.

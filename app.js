@@ -104,13 +104,44 @@ function matchCandidate(candidates,aliases){
   for(const field of ["name","full_name"]) for(const c of candidates){ const n=normalize(c[field]); if(a.some(x=>n.includes(x))) return c; }
   return null;
 }
-const compact = c => c ? {name:c.name,party:c.party,votes:c.votes,pct:c.pct,status:c.status,elected:!!c.elected,dvt:c.dvt,validDestination:!!c.validDestination,seq:c.seq} : null;
+const PRESIDENT_IDENTITY={lula:null,flavio:null};
+function candidateIdentity(c){
+  return c ? {
+    number:String(c.number??""),
+    seq:c.seq,
+    name:normalize(c.name),
+    fullName:normalize(c.full_name)
+  } : null;
+}
+function matchCandidateIdentity(candidates,identity,aliases){
+  if(identity){
+    if(identity.number){
+      const byNumber=candidates.find(c=>String(c.number??"")===identity.number);
+      if(byNumber) return byNumber;
+    }
+    if(identity.seq!==null&&identity.seq!==undefined){
+      const bySeq=candidates.find(c=>c.seq!==null&&c.seq!==undefined&&Number(c.seq)===Number(identity.seq));
+      if(bySeq) return bySeq;
+    }
+    const canonical=[identity.name,identity.fullName].filter(Boolean);
+    for(const field of ["name","full_name"]){
+      const exact=candidates.find(c=>canonical.includes(normalize(c[field])));
+      if(exact) return exact;
+    }
+  }
+  return matchCandidate(candidates,aliases);
+}
+const compact = c => c ? {name:c.name,party:c.party,number:c.number,votes:c.votes,pct:c.pct,status:c.status,elected:!!c.elected,dvt:c.dvt,validDestination:!!c.validDestination,seq:c.seq} : null;
 function parsePresident(data){
   const all=flattenCandidates(data),lula=matchCandidate(all,["LULA"]),flavio=matchCandidate(all,["FLAVIO","FLAVIO BOLSONARO"]);
+  if(lula) PRESIDENT_IDENTITY.lula=candidateIdentity(lula);
+  if(flavio) PRESIDENT_IDENTITY.flavio=candidateIdentity(flavio);
   return {all,lula,flavio,meta:generationInfo(data)};
 }
 function parseStatePresident(data){
-  const c=flattenCandidates(data),lula=matchCandidate(c,["LULA"]),flavio=matchCandidate(c,["FLAVIO","FLAVIO BOLSONARO"]);
+  const c=flattenCandidates(data),
+        lula=matchCandidateIdentity(c,PRESIDENT_IDENTITY.lula,["LULA"]),
+        flavio=matchCandidateIdentity(c,PRESIDENT_IDENTITY.flavio,["FLAVIO","FLAVIO BOLSONARO"]);
   return {
     lula:compact(lula),
     flavio:compact(flavio),
@@ -481,7 +512,9 @@ function updateCompletionState(changed,{firstRun=false}={}){
     }
     return false;
   }
-  if(!pollingComplete) finalStableChecks++;
+  // Once complete, repeated manual checks must not retrigger the "just completed" transition.
+  if(pollingComplete) return false;
+  finalStableChecks++;
   if(finalStableChecks>=FINAL_STABLE_CHECKS){
     pollingComplete=true;
     paused=false;
@@ -525,12 +558,25 @@ async function load({force=false,manual=false}={}){
   try{
     const changed=model.initialized?await incrementalLoad(force):await initialLoad();
     model.lastQueryAt=new Date(); if(changed>0||!model.lastChangeAt) model.lastChangeAt=new Date();
-    const justCompleted=updateCompletionState(changed,{firstRun});
+
+    // Capture pause state before completion logic can change controls/state.
+    // If the user paused while this automatic request was in flight, do not apply its result visually.
     const freezeAutomaticResult=paused&&!manual&&!firstRun;
+    const justCompleted=freezeAutomaticResult?false:updateCompletionState(changed,{firstRun});
+
     if(!freezeAutomaticResult) renderAll();
-    if(justCompleted){
+
+    if(freezeAutomaticResult){
+      setStatus("wait","Atualizações pausadas");
+    }else if(justCompleted){
       setStatus("ok","Apuração concluída · atualizações automáticas encerradas");
       announce("Apuração concluída. As atualizações automáticas foram encerradas; o botão Verificar agora continua disponível.");
+    }else if(manual&&pollingComplete){
+      const text=changed>0
+        ? `Verificado · ${changed} conjunto(s) alterado(s)`
+        : "Verificado · sem alterações · apuração concluída";
+      setStatus("ok",text);
+      announce(text);
     }else if(paused){
       if(manual){ const text=changed>0?`Verificado · ${changed} conjunto(s) alterado(s) · pausado`:"Verificado · sem alteração · pausado"; setStatus("wait",text); announce(text); }
       else setStatus("wait","Atualizações pausadas");

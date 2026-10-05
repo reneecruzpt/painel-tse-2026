@@ -221,7 +221,9 @@ const prefs={
   close:localStorage.getItem("tse.close")==="1",
   progressed:localStorage.getItem("tse.progressed")==="1",
   sortKey:localStorage.getItem("tse.sortKey")||"uf",
-  sortDir:localStorage.getItem("tse.sortDir")||"asc"
+  sortDir:localStorage.getItem("tse.sortDir")||"asc",
+  govUF:localStorage.getItem("tse.govUF")||"ALL",
+  senateUF:localStorage.getItem("tse.senateUF")||"ALL"
 };
 
 function setStatus(kind,text){ $("dot").className="dot "+kind; $("statusText").textContent=text; }
@@ -344,7 +346,8 @@ function governorStatus(row){
   return '<span class="governor-status">Em apuração</span>';
 }
 function renderGovernors(){
-  const rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",tf:"n",andamento:"n",esae:"n",progress:null})}));
+  let rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",tf:"n",andamento:"n",esae:"n",progress:null})}));
+  if(prefs.govUF!=="ALL") rows=rows.filter(r=>r.uf===prefs.govUF);
   syncTable("govBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
     {html:governorStatus(r),value:`${r.md}|${r.tf}|${r.esae}|${r.first?.status||""}|${r.second?.status||""}`,label:"Situação"},
@@ -375,7 +378,8 @@ function renderStates(){
   updateSortIndicators();
 }
 function renderSenate(){
-  const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
+  let rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
+  if(prefs.senateUF!=="ALL") rows=rows.filter(r=>r.uf===prefs.senateUF);
   syncTable("senBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
     {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${seatBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito-tse":r.first?.mathGuaranteed?"garantida":"aberta"}`,className:seatResultClass(r.first),label:"1º colocado"},
@@ -666,18 +670,45 @@ function updateSortIndicators(){
   });
 }
 function persistFilters(){
-  localStorage.setItem("tse.region",prefs.region); localStorage.setItem("tse.close",prefs.close?"1":"0"); localStorage.setItem("tse.progressed",prefs.progressed?"1":"0"); localStorage.setItem("tse.sortKey",prefs.sortKey); localStorage.setItem("tse.sortDir",prefs.sortDir);
+  localStorage.setItem("tse.region",prefs.region);
+  localStorage.setItem("tse.close",prefs.close?"1":"0");
+  localStorage.setItem("tse.progressed",prefs.progressed?"1":"0");
+  localStorage.setItem("tse.sortKey",prefs.sortKey);
+  localStorage.setItem("tse.sortDir",prefs.sortDir);
+  localStorage.setItem("tse.govUF",prefs.govUF);
+  localStorage.setItem("tse.senateUF",prefs.senateUF);
+}
+function fillStateSelect(id){
+  const select=$(id);
+  if(select.options.length>1) return;
+  for(const uf of UFS){
+    const option=document.createElement("option");
+    option.value=uf;
+    option.textContent=uf;
+    select.appendChild(option);
+  }
 }
 function syncFilterControls(){
   document.querySelectorAll(".region-chip").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.region===prefs.region)));
-  $("closeFilter").setAttribute("aria-pressed",String(prefs.close)); $("progressFilter").setAttribute("aria-pressed",String(prefs.progressed));
+  $("closeFilter").setAttribute("aria-pressed",String(prefs.close));
+  $("progressFilter").setAttribute("aria-pressed",String(prefs.progressed));
+  $("govStateFilter").value=UFS.includes(prefs.govUF)?prefs.govUF:"ALL";
+  $("senStateFilter").value=UFS.includes(prefs.senateUF)?prefs.senateUF:"ALL";
 }
 function initControls(){
+  fillStateSelect("govStateFilter");
+  fillStateSelect("senStateFilter");
   document.querySelectorAll(".region-chip").forEach(b=>b.addEventListener("click",()=>{prefs.region=b.dataset.region;persistFilters();syncFilterControls();renderStates();}));
   $("closeFilter").addEventListener("click",()=>{prefs.close=!prefs.close;persistFilters();syncFilterControls();renderStates();});
   $("progressFilter").addEventListener("click",()=>{prefs.progressed=!prefs.progressed;persistFilters();syncFilterControls();renderStates();});
   $("resetFilters").addEventListener("click",()=>{prefs.region="ALL";prefs.close=false;prefs.progressed=false;persistFilters();syncFilterControls();renderStates();});
   document.querySelectorAll(".sort-btn").forEach(b=>b.addEventListener("click",()=>{const key=b.dataset.sort;if(prefs.sortKey===key)prefs.sortDir=prefs.sortDir==="asc"?"desc":"asc";else{prefs.sortKey=key;prefs.sortDir=key==="uf"?"asc":"desc";}persistFilters();renderStates();}));
+
+  $("govStateFilter").addEventListener("change",e=>{prefs.govUF=e.target.value;persistFilters();renderGovernors();});
+  $("govStateClear").addEventListener("click",()=>{prefs.govUF="ALL";persistFilters();syncFilterControls();renderGovernors();});
+  $("senStateFilter").addEventListener("change",e=>{prefs.senateUF=e.target.value;persistFilters();renderSenate();});
+  $("senStateClear").addEventListener("click",()=>{prefs.senateUF="ALL";persistFilters();syncFilterControls();renderSenate();});
+
   $("pauseUpdates").addEventListener("click",()=>{paused=!paused;applyPauseState();});
   $("refresh").addEventListener("click",()=>{remaining=0;load({manual:true});});
 }

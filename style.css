@@ -246,3 +246,52 @@ html[data-theme="dark"] .governor-table td.candidate-runoff{
     padding-right:7px;
   }
 }
+
+
+/* State filters for Governor and Senate */
+.section-filter{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--card-2);
+}
+.section-filter label{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+.section-filter select{
+  min-height:32px;
+  min-width:170px;
+  padding:5px 30px 5px 9px;
+  border:1px solid var(--line-strong);
+  border-radius:8px;
+  background:var(--card);
+  color:var(--ink);
+  font:inherit;
+}
+.section-filter select:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  outline-offset:2px;
+}
+
+@media(max-width:760px){
+  .section-filter{
+    position:sticky;
+    top:0;
+    z-index:4;
+    padding:8px 11px;
+  }
+  .section-filter select{
+    flex:1;
+    min-width:0;
+    min-height:38px;
+  }
+  .section-filter .text-button{
+    min-height:38px;
+  }
+}

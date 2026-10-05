@@ -712,6 +712,68 @@ function initControls(){
   $("pauseUpdates").addEventListener("click",()=>{paused=!paused;applyPauseState();});
   $("refresh").addEventListener("click",()=>{remaining=0;load({manual:true});});
 }
+const MOBILE_TAB_QUERY="(max-width: 760px)";
+const MOBILE_TAB_IDS=["presidente","estados","governadores","senado"];
+
+function currentMobileTab(){
+  const hash=location.hash.replace("#","");
+  return MOBILE_TAB_IDS.includes(hash)?hash:"presidente";
+}
+function setMobileTab(id,{updateHash=false,focus=false}={}){
+  const mobile=window.matchMedia(MOBILE_TAB_QUERY).matches;
+  const active=MOBILE_TAB_IDS.includes(id)?id:"presidente";
+
+  document.querySelectorAll("[data-mobile-panel]").forEach(panel=>{
+    if(mobile) panel.hidden=panel.dataset.mobilePanel!==active;
+    else panel.hidden=false;
+  });
+
+  document.querySelectorAll(".mobile-tab").forEach(tab=>{
+    const selected=tab.dataset.tabTarget===active;
+    tab.setAttribute("aria-selected",String(selected));
+    tab.tabIndex=selected?0:-1;
+    if(selected&&focus) tab.focus({preventScroll:true});
+  });
+
+  if(updateHash && location.hash!==`#${active}`){
+    history.pushState(null,"",`#${active}`);
+  }
+}
+function initMobileTabs(){
+  const media=window.matchMedia(MOBILE_TAB_QUERY);
+
+  document.querySelectorAll(".mobile-tab").forEach(tab=>{
+    tab.addEventListener("click",event=>{
+      if(!media.matches) return;
+      event.preventDefault();
+      const id=tab.dataset.tabTarget;
+      setMobileTab(id,{updateHash:true});
+      document.querySelector(".mobile-nav")?.scrollIntoView({block:"start",behavior:"smooth"});
+    });
+
+    tab.addEventListener("keydown",event=>{
+      if(!media.matches || !["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+      event.preventDefault();
+      const tabs=[...document.querySelectorAll(".mobile-tab")];
+      const i=tabs.indexOf(tab);
+      let next=i;
+      if(event.key==="ArrowLeft") next=(i-1+tabs.length)%tabs.length;
+      if(event.key==="ArrowRight") next=(i+1)%tabs.length;
+      if(event.key==="Home") next=0;
+      if(event.key==="End") next=tabs.length-1;
+      const target=tabs[next];
+      setMobileTab(target.dataset.tabTarget,{updateHash:true,focus:true});
+    });
+  });
+
+  window.addEventListener("hashchange",()=>setMobileTab(currentMobileTab()));
+  const onBreakpointChange=()=>setMobileTab(currentMobileTab());
+  if(media.addEventListener) media.addEventListener("change",onBreakpointChange);
+  else media.addListener(onBreakpointChange);
+
+  setMobileTab(currentMobileTab());
+}
+
 function initTheme(){
   const saved=localStorage.getItem("tse.theme"); const dark=saved?saved==="dark":window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   applyTheme(dark?"dark":"light");
@@ -722,7 +784,7 @@ function applyTheme(theme){
 }
 
 $("pollLabel").textContent=POLL_SECONDS;
-initTheme(); initControls(); syncFilterControls(); updateSortIndicators(); applyPauseState({announceChange:false});
+initTheme(); initControls(); initMobileTabs(); syncFilterControls(); updateSortIndicators(); applyPauseState({announceChange:false});
 setInterval(()=>{
   if(pollingComplete){ $("countdown").textContent="concluída"; return; }
   if(paused){ $("countdown").textContent="pausadas"; return; }

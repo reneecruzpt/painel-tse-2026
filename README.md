@@ -38,7 +38,7 @@ Durante a totalização parcial, o painel pode exibir `🔒 Vaga garantida` para
 - usa `e.esnt`, o eleitorado das seções ainda não totalizadas;
 - considera a vaga garantida somente quando `votos do candidato > votos do 3º + eleitorado restante`.
 
-Assim, mesmo no cenário extremo em que cada eleitor ainda não totalizado desse um voto ao 3º colocado e nenhum ao candidato, o 3º não conseguiria alcançá-lo. O selo `✓ Eleito TSE` continua reservado ao campo oficial `cand.e = "s"`.
+Assim, mesmo no cenário extremo em que cada eleitor ainda não totalizado desse um voto ao 3º colocado e nenhum ao candidato, o 3º não conseguiria alcançá-lo. No Senado, onde não existe segundo turno, o campo oficial `cand.e = "s"` pode ser usado como indicação de eleito.
 
 
 ## Governadores
@@ -47,8 +47,9 @@ O painel exibe, por UF, os três primeiros colocados para Governador logo após 
 
 - 1º e 2º colocados ficam lado a lado para acompanhar a faixa de eventual segundo turno;
 - o 3º colocado aparece destacado como fora dessa faixa no momento, com a distância em pontos percentuais para o 2º;
-- o campo oficial `md` do EA20 é usado para mostrar `🔒 Eleito matematicamente` quando `md=e` e `↪ 2º turno definido` quando `md=s`;
-- `✓ Eleito TSE` continua reservado ao campo oficial `cand.e = "s"`.
+- durante a totalização parcial, o campo oficial `md` do EA20 é usado para mostrar `🔒 Eleito matematicamente` quando `md=e` e `↪ 2º turno definido` quando `md=s`;
+- após a totalização final, o painel usa `cand.st` para distinguir `Eleito` de `2º turno`;
+- o campo `cand.e = "s"` não é interpretado isoladamente como "eleito" para Governador, porque o próprio TSE também o preenche com `s` para candidatos classificados ao segundo turno.
 
 
 ## Encerramento automático do polling

@@ -286,6 +286,7 @@ function syncTable(tbodyId,rows,keyFn,cellsFn){
   const existing=new Map([...tbody.querySelectorAll("tr[data-key]")].map(tr=>[tr.dataset.key,tr]));
   if(!rows.length){ tbody.innerHTML=`<tr><td colspan="20" class="msg">Nenhum registro corresponde aos filtros.</td></tr>`; return; }
   const wanted=new Set();
+  const flashCells=[];
   for(const row of rows){
     const key=keyFn(row); wanted.add(key);
     let tr=existing.get(key);
@@ -300,12 +301,15 @@ function syncTable(tbodyId,rows,keyFn,cellsFn){
       td.className=cell.className||"";
       if(cell.label) td.dataset.label=cell.label; else delete td.dataset.label;
       if(td.innerHTML!==cell.html) td.innerHTML=cell.html;
-      if(old!==undefined&&old!==next){ td.classList.remove("cell-flash"); void td.offsetWidth; td.classList.add("cell-flash"); }
+      if(old!==undefined&&old!==next) flashCells.push(td);
       td.dataset.value=next;
     });
     tbody.appendChild(tr);
   }
   for(const [key,tr] of existing) if(!wanted.has(key)) tr.remove();
+  if(flashCells.length){
+    requestAnimationFrame(()=>flashCells.forEach(td=>td.classList.add("cell-flash")));
+  }
 }
 
 function visibleStates(){
@@ -409,7 +413,18 @@ function renderErrors(){
   if(model.errors.length){ box.style.display="block"; box.textContent=`Falha temporária em ${model.errors.length} consulta(s). Quando já havia dado carregado, a última leitura foi mantida.`; box.title=model.errors.slice(0,6).join("\n"); }
   else { box.style.display="none"; box.textContent=""; box.removeAttribute("title"); }
 }
-function renderAll(){ renderMeta(); renderPresident(); renderGovernors(); renderStates(); renderSenate(); renderErrors(); }
+function renderSection(id){
+  if(id==="presidente") renderPresident();
+  else if(id==="estados") renderStates();
+  else if(id==="governadores") renderGovernors();
+  else if(id==="senado") renderSenate();
+}
+function renderAll(){
+  renderMeta();
+  if(window.matchMedia(MOBILE_TAB_QUERY).matches) renderSection(currentMobileTab());
+  else { renderPresident(); renderGovernors(); renderStates(); renderSenate(); }
+  renderErrors();
+}
 
 function captureMobileViewport(){
   if(!window.matchMedia("(max-width: 760px)").matches) return null;
@@ -545,6 +560,8 @@ async function incrementalLoad(force=false){
 }
 
 let loading=false,remaining=POLL_SECONDS,paused=false,pollingComplete=false,finalStableChecks=0;
+let backgroundSince=document.hidden?Date.now():null;
+const REDUCED_MOTION_QUERY="(prefers-reduced-motion: reduce)";
 
 function allSectionsAt100(){
   const isComplete=v=>Number.isFinite(Number(v))&&Number(v)>=100;
@@ -653,7 +670,10 @@ function applyPauseState({announceChange=true}={}){
 async function load({force=false,manual=false}={}){
   if(loading) return;
   const firstRun=!model.initialized;
-  loading=true; $("refresh").disabled=true; setStatus("wait","Consultando TSE…");
+  loading=true;
+  $("refresh").disabled=true;
+  $("conteudo").setAttribute("aria-busy","true");
+  setStatus("wait","Consultando TSE…");
   try{
     const changed=model.initialized?await incrementalLoad(force):await initialLoad();
     model.lastQueryAt=new Date(); if(changed>0||!model.lastChangeAt) model.lastChangeAt=new Date();
@@ -693,7 +713,12 @@ async function load({force=false,manual=false}={}){
     model.errors.push(e.message||String(e)); model.lastQueryAt=new Date(); renderErrors(); renderMeta();
     setStatus("err",model.initialized?"Falha temporária · última leitura mantida":"Erro ao consultar TSE");
     announce("Falha temporária na atualização. A última leitura disponível foi mantida.");
-  }finally{ loading=false; $("refresh").disabled=false; remaining=POLL_SECONDS; }
+  }finally{
+    loading=false;
+    $("refresh").disabled=false;
+    $("conteudo").setAttribute("aria-busy","false");
+    remaining=POLL_SECONDS;
+  }
 }
 
 function updateSortIndicators(){
@@ -770,6 +795,12 @@ function initControls(){
 }
 const MOBILE_TAB_QUERY="(max-width: 760px)";
 const MOBILE_TAB_IDS=["presidente","estados","governadores","senado"];
+const MOBILE_PANEL_LABELS={
+  presidente:"pres-title",
+  estados:"states-title",
+  governadores:"gov-title",
+  senado:"sen-title"
+};
 
 function currentMobileTab(){
   const hash=location.hash.replace("#","");
@@ -780,8 +811,16 @@ function setMobileTab(id,{updateHash=false,focus=false}={}){
   const active=MOBILE_TAB_IDS.includes(id)?id:"presidente";
 
   document.querySelectorAll("[data-mobile-panel]").forEach(panel=>{
-    if(mobile) panel.hidden=panel.dataset.mobilePanel!==active;
-    else panel.hidden=false;
+    const panelId=panel.dataset.mobilePanel;
+    if(mobile){
+      panel.hidden=panelId!==active;
+      panel.setAttribute("role","tabpanel");
+      panel.setAttribute("aria-labelledby",`tab-${panelId}`);
+    }else{
+      panel.hidden=false;
+      panel.removeAttribute("role");
+      panel.setAttribute("aria-labelledby",MOBILE_PANEL_LABELS[panelId]);
+    }
   });
 
   document.querySelectorAll(".mobile-tab").forEach(tab=>{
@@ -794,6 +833,11 @@ function setMobileTab(id,{updateHash=false,focus=false}={}){
   if(updateHash && location.hash!==`#${active}`){
     history.pushState(null,"",`#${active}`);
   }
+
+  if(model.initialized){
+    if(mobile) renderSection(active);
+    else renderAll();
+  }
 }
 function initMobileTabs(){
   const media=window.matchMedia(MOBILE_TAB_QUERY);
@@ -804,7 +848,8 @@ function initMobileTabs(){
       event.preventDefault();
       const id=tab.dataset.tabTarget;
       setMobileTab(id,{updateHash:true});
-      document.querySelector(".mobile-nav")?.scrollIntoView({block:"start",behavior:"smooth"});
+      const behavior=window.matchMedia(REDUCED_MOTION_QUERY).matches?"auto":"smooth";
+      document.querySelector(".mobile-nav")?.scrollIntoView({block:"start",behavior});
     });
 
     tab.addEventListener("keydown",event=>{
@@ -841,9 +886,32 @@ function applyTheme(theme){
 
 $("pollLabel").textContent=POLL_SECONDS;
 initTheme(); initControls(); initMobileTabs(); syncFilterControls(); updateSortIndicators(); applyPauseState({announceChange:false});
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){
+    backgroundSince=Date.now();
+    if(!paused&&!pollingComplete) $("countdown").textContent="em segundo plano";
+    return;
+  }
+
+  const hiddenFor=backgroundSince===null?0:Date.now()-backgroundSince;
+  backgroundSince=null;
+
+  if(pollingComplete){ $("countdown").textContent="concluída"; return; }
+  if(paused){ $("countdown").textContent="pausadas"; return; }
+
+  remaining=POLL_SECONDS;
+  if(model.initialized && hiddenFor>=POLL_SECONDS*1000 && !loading){
+    load();
+  }else{
+    $("countdown").textContent=loading?"consultando…":remaining+" s";
+  }
+});
+
 setInterval(()=>{
   if(pollingComplete){ $("countdown").textContent="concluída"; return; }
   if(paused){ $("countdown").textContent="pausadas"; return; }
+  if(document.hidden){ $("countdown").textContent="em segundo plano"; return; }
   if(!loading) remaining--;
   if(remaining<=0){remaining=POLL_SECONDS;load();}
   $("countdown").textContent=loading?"consultando…":Math.max(0,remaining)+" s";

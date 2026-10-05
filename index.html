@@ -122,6 +122,13 @@
       </div>
       <span class="data-badge">1 vaga / UF</span>
     </div>
+    <div class="section-filter" aria-label="Filtro de Governadores por estado">
+      <label for="govStateFilter">Estado</label>
+      <select id="govStateFilter">
+        <option value="ALL">Todos os estados</option>
+      </select>
+      <button id="govStateClear" class="text-button" type="button">Limpar</button>
+    </div>
     <div class="tablebox governor-box">
       <table class="governor-table">
         <caption class="sr-only">Primeiro, segundo e terceiro colocados para Governador em cada unidade da federação</caption>
@@ -143,6 +150,13 @@
         <p class="section-note">1º e 2º estão na faixa das duas vagas; <span class="legend outside"></span>3º aparece em vermelho como fora das vagas no momento. <span class="math-badge demo">🔒 Vaga garantida</span> é um cálculo conservador pelos votos e pelo eleitorado ainda não totalizado; <span class="elected-badge demo">✓ Eleito TSE</span> é a atribuição oficial.</p>
       </div>
       <span class="data-badge">2 vagas / UF</span>
+    </div>
+    <div class="section-filter" aria-label="Filtro do Senado por estado">
+      <label for="senStateFilter">Estado</label>
+      <select id="senStateFilter">
+        <option value="ALL">Todos os estados</option>
+      </select>
+      <button id="senStateClear" class="text-button" type="button">Limpar</button>
     </div>
     <div class="tablebox senate-box">
       <table class="senate-table">

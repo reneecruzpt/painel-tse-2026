@@ -70,3 +70,12 @@ A classificação de candidatos segue prioritariamente `cand.seq`, o sequencial 
 ## Recuperação de falhas
 
 Se uma consulta de UF falhar na carga inicial, ela permanece na fila de atualização. O painel tenta novamente nos ciclos seguintes em vez de considerar aquela UF definitivamente carregada.
+
+
+## Robustez de pausa e verificação manual
+
+Se o usuário pausar enquanto uma consulta automática já estiver em andamento, o resultado dessa consulta não é aplicado visualmente. Ao retomar, o painel volta a renderizar o estado mais recente. Depois de encerrada a apuração, `Verificar agora` continua disponível e uma conferência sem mudanças informa explicitamente que não houve alterações, sem repetir o evento de encerramento.
+
+## Identificação de Lula e Flávio por UF
+
+Os nomes são usados apenas para descobrir os candidatos no arquivo nacional. Depois disso, o painel guarda a identidade canônica de cada candidatura e, nos arquivos por UF, procura primeiro pelo número do candidato e depois pelo sequencial oficial (`cand.seq`). Comparação textual fica apenas como fallback de segurança.

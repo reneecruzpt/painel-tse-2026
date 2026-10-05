@@ -2,6 +2,17 @@
 
 Este documento define a próxima etapa de evolução do Painel TSE 2026: uma experiência mobile-first, mantendo a mesma fonte oficial do TSE, a mesma lógica de atualização e a mesma precisão dos dados da versão desktop.
 
+## Estado de implementação
+
+- **Fase 1 — estrutura: implementada**
+  - cabeçalho mobile compactado;
+  - navegação rápida por âncoras adicionada;
+  - Lula × Flávio convertido em cartões por UF no mobile;
+  - cartões de Governadores e Senado reorganizados para leitura em linhas de candidatos.
+- **Fase 2 — interação: pendente**
+- **Fase 3 — acabamento: pendente**
+- **Fase 4 — performance e acessibilidade: pendente**
+
 ## Objetivo
 
 Criar uma versão confortável para uso em telemóveis, especialmente em telas entre 320 px e 480 px, sem transformar o painel numa aplicação diferente. A prioridade é permitir leitura rápida durante a apuração, com pouca rolagem horizontal, controles acessíveis com o polegar e informação crítica visível logo no primeiro ecrã.

@@ -82,7 +82,15 @@ function parseGovernor(data){
   const c=flattenCandidates(data);
   const first=compact(c[0]),second=compact(c[1]),third=compact(c[2]);
   const gap=(second&&third)?Math.max(0,second.pct-third.pct):null;
-  return {first,second,third,gap,md:String(data.md||"n").toLowerCase(),progress:sectionsPct(data),idg:data.idg??null};
+  return {
+    first,second,third,gap,
+    md:String(data.md||"n").toLowerCase(),
+    tf:String(data.tf||"n").toLowerCase(),
+    andamento:String(data.and||"n").toLowerCase(),
+    esae:String(data.esae||"n").toLowerCase(),
+    progress:sectionsPct(data),
+    idg:data.idg??null
+  };
 }
 function parseSenate(data){
   const c=flattenCandidates(data);
@@ -151,11 +159,19 @@ function leaderVotesText(diffVotes){
   return "Empate";
 }
 function candidateKey(c){ return c?`${c.name}|${c.party}`:"—"; }
+function governorFinalStatus(c){
+  const st=normalize(c?.status);
+  if(st.includes("2º TURNO")||st.includes("2 TURNO")) return "runoff";
+  if(st.startsWith("ELEITO")) return "elected";
+  return "";
+}
 function governorBadge(row,position){
   const c=position===1?row.first:position===2?row.second:row.third;
-  if(c?.elected) return '<span class="elected-badge" title="Condição de eleito atribuída oficialmente pelo TSE">✓ Eleito TSE</span>';
-  if(row.md==="e"&&position===1) return '<span class="math-official-badge" title="O TSE informa md=e: eleição matematicamente definida com eleito no 1º turno">🔒 Eleito matematicamente</span>';
-  if(row.md==="s"&&(position===1||position===2)) return '<span class="runoff-badge" title="O TSE informa md=s: eleição matematicamente definida para segundo turno">↪ 2º turno definido</span>';
+  const finalStatus=governorFinalStatus(c);
+  if(finalStatus==="elected") return '<span class="elected-badge" title="Situação final oficial do TSE: candidato eleito">✓ Eleito TSE</span>';
+  if(finalStatus==="runoff") return '<span class="runoff-badge" title="Situação final oficial do TSE: candidato classificado para o 2º turno">↪ 2º turno TSE</span>';
+  if(row.tf!=="s"&&row.md==="e"&&position===1) return '<span class="math-official-badge" title="O TSE informa md=e durante a totalização parcial: eleição matematicamente definida com eleito no 1º turno">🔒 Eleito matematicamente</span>';
+  if(row.tf!=="s"&&row.md==="s"&&(position===1||position===2)) return '<span class="runoff-badge" title="O TSE informa md=s durante a totalização parcial: eleição matematicamente definida para segundo turno">↪ 2º turno definido</span>';
   return "";
 }
 function seatBadge(c){
@@ -219,20 +235,25 @@ function renderPresident(){
   ]);
 }
 function governorStatus(row){
-  if(row.md==="s") return '<span class="governor-status runoff">↪ 2º turno</span>';
-  if(row.md==="e") return '<span class="governor-status decided">🔒 1º turno definido</span>';
-  if(row.first?.elected) return '<span class="governor-status decided">✓ Eleito TSE</span>';
+  const firstStatus=governorFinalStatus(row.first);
+  const secondStatus=governorFinalStatus(row.second);
+  if(firstStatus==="runoff"||secondStatus==="runoff") return '<span class="governor-status runoff">↪ 2º turno TSE</span>';
+  if(firstStatus==="elected") return '<span class="governor-status decided">✓ Eleito TSE</span>';
+  if(row.tf!=="s"&&row.md==="s") return '<span class="governor-status runoff">↪ 2º turno</span>';
+  if(row.tf!=="s"&&row.md==="e") return '<span class="governor-status decided">🔒 1º turno definido</span>';
+  if(row.tf==="s"&&row.esae==="s") return '<span class="governor-status">Sem atribuição</span>';
+  if(row.tf==="s") return '<span class="governor-status">Finalizada</span>';
   return '<span class="governor-status">Em apuração</span>';
 }
 function renderGovernors(){
-  const rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",progress:null})}));
+  const rows=UFS.map(uf=>({uf,...(model.governors.get(uf)||{first:null,second:null,third:null,gap:null,md:"n",tf:"n",andamento:"n",esae:"n",progress:null})}));
   syncTable("govBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
-    {html:governorStatus(r),value:r.md,label:"Situação"},
-    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}`,label:"1º colocado"},
+    {html:governorStatus(r),value:`${r.md}|${r.tf}|${r.esae}|${r.first?.status||""}|${r.second?.status||""}`,label:"Situação"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}|${r.tf}|${r.first?.status||""}`,label:"1º colocado"},
     {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
     {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
-    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${governorBadge(r,2)}`,value:`${candidateKey(r.second)}|${r.md}`,label:"2º colocado"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${governorBadge(r,2)}`,value:`${candidateKey(r.second)}|${r.md}|${r.tf}|${r.second?.status||""}`,label:"2º colocado"},
     {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
     {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
     {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora da faixa"},

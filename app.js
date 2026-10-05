@@ -192,7 +192,11 @@ function trackerMap(data){
   for(const a of (data.abr||[])){
     const code=String(a.cdabr||"").toUpperCase();
     if(!code) continue;
-    m.set(code,{signature:`${a.dt||""}|${a.ht||""}|${a.s?.st??""}|${a.and||""}`,progress:asNumber(a.s?.pstn??a.s?.pst)});
+    m.set(code,{
+      signature:`${a.dt||""}|${a.ht||""}|${a.s?.st??""}|${a.and||""}`,
+      progress:asNumber(a.s?.pstn??a.s?.pst),
+      andamento:String(a.and||"n").toLowerCase()
+    });
   }
   return m;
 }
@@ -419,6 +423,17 @@ async function refreshTrackers(){
   const [p,s]=await Promise.all([getJson(trackingUrl(ELEICAO_PRESIDENTE)),getJson(trackingUrl(ELEICAO_ESTADUAL))]);
   return {pres:trackerMap(p),senate:trackerMap(s)};
 }
+function queueFinalizationSync(next){
+  const br=next.pres.get("BR");
+  if(br?.andamento==="f" && model.national?.meta?.andamento!=="f") model.pendingNational=true;
+
+  for(const uf of UFS){
+    const state=next.senate.get(uf);
+    if(state?.andamento!=="f") continue;
+    if(model.governors.get(uf)?.andamento!=="f") model.pendingGovernor.add(uf);
+    if(model.senate.get(uf)?.andamento!=="f") model.pendingSenate.add(uf);
+  }
+}
 function detectChanges(next){
   const prevP=model.trackers.pres,prevS=model.trackers.senate;
   if(prevP.size){
@@ -428,6 +443,9 @@ function detectChanges(next){
     for(const [code,item] of next.senate){ if(prevS.get(code)?.signature!==item.signature&&UFS.includes(code)){ model.pendingGovernor.add(code); model.pendingSenate.add(code); } }
   }
   model.trackers=next;
+  // EA14 and EA20 are generated/distributed in parallel. If EA14 already says
+  // finalizado but a local EA20 copy is still partial, keep retrying until EA20 catches up.
+  queueFinalizationSync(next);
 }
 
 async function initialLoad(){
@@ -478,21 +496,52 @@ async function incrementalLoad(force=false){
 
 let loading=false,remaining=POLL_SECONDS,paused=false,pollingComplete=false,finalStableChecks=0;
 
-function allTalliesComplete(){
+function allSectionsAt100(){
   const isComplete=v=>Number.isFinite(Number(v))&&Number(v)>=100;
-  // Presidente é uma eleição federal: a finalização oficial é confirmada no arquivo BR.
-  if(!model.national || !isComplete(model.national.meta?.progress) || model.national.meta?.tf!=="s") return false;
+  if(!model.national || !isComplete(model.national.meta?.progress)) return false;
   for(const uf of UFS){
-    // O EA20 de Presidente por UF é apenas um recorte estadual da eleição federal:
-    // exige 100% das seções, mas a finalização oficial vem do arquivo BR acima.
     if(!isComplete(model.states.get(uf)?.progress)) return false;
-
-    const gov=model.governors.get(uf);
-    const sen=model.senate.get(uf);
-    if(!gov || !isComplete(gov.progress) || gov.tf!=="s") return false;
-    if(!sen || !isComplete(sen.progress) || sen.tf!=="s") return false;
+    if(!isComplete(model.governors.get(uf)?.progress)) return false;
+    if(!isComplete(model.senate.get(uf)?.progress)) return false;
   }
   return true;
+}
+function allTalliesComplete(){
+  if(!allSectionsAt100()) return false;
+
+  // EA14 is the tracking authority for "and=f". TSE defines this state as
+  // 100% of sections plus the official final totalization in that abrangência.
+  const br=model.trackers.pres.get("BR");
+  if(br?.andamento!=="f" || model.national?.meta?.andamento!=="f") return false;
+
+  for(const uf of UFS){
+    const stateTracker=model.trackers.senate.get(uf);
+    const gov=model.governors.get(uf);
+    const sen=model.senate.get(uf);
+    if(stateTracker?.andamento!=="f") return false;
+    if(gov?.andamento!=="f" || sen?.andamento!=="f") return false;
+  }
+
+  // Do not stop while a final EA20 synchronization is still pending.
+  if(model.pendingNational || model.pendingPres.size || model.pendingGovernor.size || model.pendingSenate.size) return false;
+  return true;
+}
+function completionWaitingText(){
+  if(!model.national || Number(model.national.meta?.progress)<100) return "";
+
+  const brFinal=model.trackers.pres.get("BR")?.andamento==="f";
+  let statesWaiting=0;
+  for(const uf of UFS){
+    const trackerFinal=model.trackers.senate.get(uf)?.andamento==="f";
+    const govFinal=model.governors.get(uf)?.andamento==="f";
+    const senFinal=model.senate.get(uf)?.andamento==="f";
+    if(!(trackerFinal&&govFinal&&senFinal)) statesWaiting++;
+  }
+
+  if(!brFinal) return "100% das seções nacionais · aguardando totalização final do TSE";
+  if(statesWaiting>0) return `100% nacional · aguardando finalização do TSE em ${statesWaiting} UF(s)`;
+  if(model.pendingNational || model.pendingGovernor.size || model.pendingSenate.size) return "Finalização TSE detectada · sincronizando dados finais";
+  return allSectionsAt100() ? "100% das seções · confirmando encerramento" : "";
 }
 function updateCompletionState(changed,{firstRun=false}={}){
   const complete=allTalliesComplete() && model.errors.length===0;
@@ -582,7 +631,14 @@ async function load({force=false,manual=false}={}){
       else setStatus("wait","Atualizações pausadas");
     }else if(firstRun){ setStatus("ok","Dados carregados"); announce("Dados carregados."); }
     else if(changed>0){ const text=`Dados atualizados · ${changed} conjunto(s) alterado(s)`; setStatus("ok",text); announce(text); }
-    else { const t=model.lastChangeAt?.toLocaleTimeString("pt-BR")||model.lastQueryAt.toLocaleTimeString("pt-BR"); setStatus("ok",`Sem alteração desde ${t}`); }
+    else {
+      const waiting=completionWaitingText();
+      if(waiting) setStatus("wait",waiting);
+      else {
+        const t=model.lastChangeAt?.toLocaleTimeString("pt-BR")||model.lastQueryAt.toLocaleTimeString("pt-BR");
+        setStatus("ok",`Sem alteração desde ${t}`);
+      }
+    }
   }catch(e){
     model.errors.push(e.message||String(e)); model.lastQueryAt=new Date(); renderErrors(); renderMeta();
     setStatus("err",model.initialized?"Falha temporária · última leitura mantida":"Erro ao consultar TSE");

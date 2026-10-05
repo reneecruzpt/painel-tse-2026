@@ -20,7 +20,13 @@ Este documento define a próxima etapa de evolução do Painel TSE 2026: uma exp
   - nomes longos, partidos e múltiplos badges passam a quebrar linha sem alargar o layout;
   - Presidente ganha layout compacto em cartões abaixo de 480 px;
   - proteção contra overflow horizontal não intencional nas seções mobile.
-- **Fase 4 — performance e acessibilidade: pendente**
+- **Fase 4 — performance e acessibilidade: implementada (validação manual em dispositivo recomendada)**
+  - no mobile, somente a aba visível é renderizada a cada atualização; as demais são renderizadas quando abertas;
+  - animações de células são agrupadas em `requestAnimationFrame`, removendo reflows síncronos por célula;
+  - polling automático é suspenso enquanto a aba está em segundo plano e uma verificação imediata ocorre ao retornar quando os dados podem estar desatualizados;
+  - `aria-busy`, semântica de `tabpanel`, foco por teclado e respeito a `prefers-reduced-motion` foram reforçados;
+  - estilos adicionais para alto contraste/`forced-colors` e zoom estreito foram adicionados;
+  - VoiceOver/TalkBack continuam recomendados como validação manual final em dispositivos reais.
 
 ## Objetivo
 
@@ -164,7 +170,7 @@ Não alterar a estratégia atual de dados:
 - polling encerra após totalização final oficial e estabilidade;
 - uma aba em background não deve ganhar lógica de polling adicional.
 
-Como melhoria futura, avaliar reduzir a frequência quando `document.visibilityState === "hidden"`, desde que isso não comprometa a atualização imediata ao retornar para a aba.
+Quando `document.visibilityState === "hidden"`, o painel suspende o polling automático para reduzir rede e CPU. Ao retornar à aba, faz uma verificação imediata se ela ficou oculta por pelo menos um ciclo normal de 15 segundos.
 
 ### Renderização
 

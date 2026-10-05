@@ -50,11 +50,37 @@ async function mapLimit(items,limit,worker){
 }
 function flattenCandidates(data){
   const rows=[];
+  const validVotesRaw=data.v?.vv;
+  const validVotes=(validVotesRaw===null||validVotesRaw===undefined||validVotesRaw==="")?null:asNumber(validVotesRaw);
   for(const cargo of (data.carg||[])) for(const agr of (cargo.agr||[])) for(const par of (agr.par||[])) for(const cand of (par.cand||[])){
-    const pct=(cand.pvapn!==null&&cand.pvapn!==undefined&&cand.pvapn!=="")?cand.pvapn:cand.pvap;
-    rows.push({name:cand.nmu||cand.nm||"",full_name:cand.nm||"",party:par.sg||"",number:cand.n,votes:Math.trunc(asNumber(cand.vap)),pct:asNumber(pct),status:cand.st||"",elected:String(cand.e||"n").toLowerCase()==="s"});
+    const officialPctRaw=(cand.pvapn!==null&&cand.pvapn!==undefined&&cand.pvapn!=="")?cand.pvapn:cand.pvap;
+    const votes=Math.trunc(asNumber(cand.vap));
+    const dvt=cand.dvt||"";
+    const validDestination=normalize(dvt).startsWith("VALIDO");
+    const seqRaw=cand.seq;
+    const seq=(seqRaw===null||seqRaw===undefined||seqRaw==="")?null:asNumber(seqRaw);
+    const pct=(validVotes!==null&&validVotes>0)
+      ? (validDestination ? (100*votes/validVotes) : 0)
+      : asNumber(officialPctRaw);
+    rows.push({
+      name:cand.nmu||cand.nm||"",
+      full_name:cand.nm||"",
+      party:par.sg||"",
+      number:cand.n,
+      votes,
+      pct,
+      officialPct:asNumber(officialPctRaw),
+      dvt,
+      validDestination,
+      seq,
+      status:cand.st||"",
+      elected:String(cand.e||"n").toLowerCase()==="s"
+    });
   }
-  return rows.sort((a,b)=>(b.votes-a.votes)||(b.pct-a.pct));
+  return rows.sort((a,b)=>{
+    const as=a.seq===null?Infinity:a.seq,bs=b.seq===null?Infinity:b.seq;
+    return (as-bs)||(b.votes-a.votes)||(b.pct-a.pct);
+  });
 }
 function sectionsPct(data){
   const s=data.s||{};
@@ -63,20 +89,38 @@ function sectionsPct(data){
   if(!val){ const total=asNumber(s.ts),done=asNumber(s.st); if(total) val=100*done/total; }
   return val;
 }
-function generationInfo(data){ return {generation_date:data.dg||"",generation_time:data.hg||"",progress:sectionsPct(data),idg:data.idg??null}; }
+function generationInfo(data){
+  return {
+    generation_date:data.dg||"",
+    generation_time:data.hg||"",
+    progress:sectionsPct(data),
+    tf:String(data.tf||"n").toLowerCase(),
+    andamento:String(data.and||"n").toLowerCase(),
+    idg:data.idg??null
+  };
+}
 function matchCandidate(candidates,aliases){
   const a=aliases.map(normalize);
   for(const field of ["name","full_name"]) for(const c of candidates){ const n=normalize(c[field]); if(a.some(x=>n.includes(x))) return c; }
   return null;
 }
-const compact = c => c ? {name:c.name,party:c.party,votes:c.votes,pct:c.pct,status:c.status,elected:!!c.elected} : null;
+const compact = c => c ? {name:c.name,party:c.party,votes:c.votes,pct:c.pct,status:c.status,elected:!!c.elected,dvt:c.dvt,validDestination:!!c.validDestination,seq:c.seq} : null;
 function parsePresident(data){
   const all=flattenCandidates(data),lula=matchCandidate(all,["LULA"]),flavio=matchCandidate(all,["FLAVIO","FLAVIO BOLSONARO"]);
   return {all,lula,flavio,meta:generationInfo(data)};
 }
 function parseStatePresident(data){
   const c=flattenCandidates(data),lula=matchCandidate(c,["LULA"]),flavio=matchCandidate(c,["FLAVIO","FLAVIO BOLSONARO"]);
-  return {lula:compact(lula),flavio:compact(flavio),diff:(lula&&flavio)?lula.pct-flavio.pct:null,diffVotes:(lula&&flavio)?lula.votes-flavio.votes:null,progress:sectionsPct(data),idg:data.idg??null};
+  return {
+    lula:compact(lula),
+    flavio:compact(flavio),
+    diff:(lula&&flavio)?lula.pct-flavio.pct:null,
+    diffVotes:(lula&&flavio)?lula.votes-flavio.votes:null,
+    progress:sectionsPct(data),
+    tf:String(data.tf||"n").toLowerCase(),
+    andamento:String(data.and||"n").toLowerCase(),
+    idg:data.idg??null
+  };
 }
 function parseGovernor(data){
   const c=flattenCandidates(data);
@@ -103,7 +147,14 @@ function parseSenate(data){
     if(first) first.mathGuaranteed=first.votes>maxChallengerVotes;
     if(second) second.mathGuaranteed=second.votes>maxChallengerVotes;
   }
-  return {first,second,third,gap,remainingElectors,progress:sectionsPct(data),idg:data.idg??null};
+  return {
+    first,second,third,gap,remainingElectors,
+    tf:String(data.tf||"n").toLowerCase(),
+    andamento:String(data.and||"n").toLowerCase(),
+    esae:String(data.esae||"n").toLowerCase(),
+    progress:sectionsPct(data),
+    idg:data.idg??null
+  };
 }
 function trackerMap(data){
   const m=new Map();
@@ -355,11 +406,19 @@ async function initialLoad(){
   const tasks=UFS.flatMap(uf=>[{kind:"pres",uf},{kind:"governor",uf},{kind:"senate",uf}]);
   let changed=0;
   await mapLimit(tasks,8,async task=>{
-    try{ const c=task.kind==="pres"?await fetchPresidentUF(task.uf):task.kind==="governor"?await fetchGovernorUF(task.uf):await fetchSenateUF(task.uf); if(c) changed++; }
-    catch(e){ model.errors.push(e.message); }
+    try{
+      const c=task.kind==="pres"?await fetchPresidentUF(task.uf):task.kind==="governor"?await fetchGovernorUF(task.uf):await fetchSenateUF(task.uf);
+      if(c) changed++;
+    }catch(e){
+      model.errors.push(e.message);
+      if(task.kind==="pres") model.pendingPres.add(task.uf);
+      else if(task.kind==="governor") model.pendingGovernor.add(task.uf);
+      else model.pendingSenate.add(task.uf);
+    }
   });
   const trackers=await trackerPromise; if(trackers) model.trackers=trackers;
-  model.pendingNational=false; model.pendingPres.clear(); model.pendingGovernor.clear(); model.pendingSenate.clear(); model.initialized=true;
+  model.pendingNational=false;
+  model.initialized=true;
   return changed;
 }
 async function incrementalLoad(force=false){
@@ -390,11 +449,17 @@ let loading=false,remaining=POLL_SECONDS,paused=false,pollingComplete=false,fina
 
 function allTalliesComplete(){
   const isComplete=v=>Number.isFinite(Number(v))&&Number(v)>=100;
-  if(!model.national || !isComplete(model.national.meta?.progress)) return false;
+  // Presidente é uma eleição federal: a finalização oficial é confirmada no arquivo BR.
+  if(!model.national || !isComplete(model.national.meta?.progress) || model.national.meta?.tf!=="s") return false;
   for(const uf of UFS){
+    // O EA20 de Presidente por UF é apenas um recorte estadual da eleição federal:
+    // exige 100% das seções, mas a finalização oficial vem do arquivo BR acima.
     if(!isComplete(model.states.get(uf)?.progress)) return false;
-    if(!isComplete(model.governors.get(uf)?.progress)) return false;
-    if(!isComplete(model.senate.get(uf)?.progress)) return false;
+
+    const gov=model.governors.get(uf);
+    const sen=model.senate.get(uf);
+    if(!gov || !isComplete(gov.progress) || gov.tf!=="s") return false;
+    if(!sen || !isComplete(sen.progress) || sen.tf!=="s") return false;
   }
   return true;
 }

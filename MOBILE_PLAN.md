@@ -14,7 +14,12 @@ Este documento define a próxima etapa de evolução do Painel TSE 2026: uma exp
   - seletor compacto de ordenação para Lula × Flávio, com direção crescente/decrescente;
   - Pausar/Retomar, Verificar agora, abas e filtros com alvos mínimos de aproximadamente 44 px;
   - posição de leitura preservada durante atualizações automáticas e ao retomar a apuração.
-- **Fase 3 — acabamento: pendente**
+- **Fase 3 — acabamento: implementada**
+  - tipografia e espaçamentos refinados em 760/480/360 px;
+  - cores de eleito e 2º turno revisadas para temas claro e escuro;
+  - nomes longos, partidos e múltiplos badges passam a quebrar linha sem alargar o layout;
+  - Presidente ganha layout compacto em cartões abaixo de 480 px;
+  - proteção contra overflow horizontal não intencional nas seções mobile.
 - **Fase 4 — performance e acessibilidade: pendente**
 
 ## Objetivo
@@ -196,7 +201,7 @@ A maior parte das mudanças estruturais deve ocorrer em `max-width: 760px`, apro
 ### Fase 1 — estrutura
 
 1. reduzir o cabeçalho mobile;
-2. adicionar navegação por âncoras;
+2. adicionar navegação por abas;
 3. transformar Lula × Flávio em cartões mobile;
 4. revisar cartões de Governadores e Senado.
 

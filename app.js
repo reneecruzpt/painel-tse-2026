@@ -251,6 +251,17 @@ function governorFinalStatus(c){
   if(st.startsWith("ELEITO")) return "elected";
   return "";
 }
+function governorCandidateState(row,position){
+  const c=position===1?row.first:position===2?row.second:row.third;
+  const finalStatus=governorFinalStatus(c);
+  if(finalStatus==="elected") return "elected";
+  if(finalStatus==="runoff") return "runoff";
+  if(row.tf!=="s"&&row.md==="s"&&(position===1||position===2)) return "runoff";
+  return "";
+}
+function candidateResultClass(state){
+  return state==="elected"?"candidate-elected":state==="runoff"?"candidate-runoff":"";
+}
 function governorBadge(row,position){
   const c=position===1?row.first:position===2?row.second:row.third;
   const finalStatus=governorFinalStatus(c);
@@ -260,6 +271,7 @@ function governorBadge(row,position){
   if(row.tf!=="s"&&row.md==="s"&&(position===1||position===2)) return '<span class="runoff-badge" title="O TSE informa md=s durante a totalização parcial: eleição matematicamente definida para segundo turno">↪ 2º turno definido</span>';
   return "";
 }
+function seatResultClass(c){ return c?.elected?"candidate-elected":""; }
 function seatBadge(c){
   if(c?.elected) return '<span class="elected-badge" title="Condição de eleito atribuída oficialmente pelo TSE">✓ Eleito TSE</span>';
   if(c?.mathGuaranteed) return '<span class="math-badge" title="Cálculo conservador do painel: os votos atuais superam o máximo que o 3º colocado alcançaria mesmo recebendo um voto de cada eleitor ainda em seção não totalizada. Não substitui a atribuição oficial do TSE.">🔒 Vaga garantida</span>';
@@ -336,12 +348,12 @@ function renderGovernors(){
   syncTable("govBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
     {html:governorStatus(r),value:`${r.md}|${r.tf}|${r.esae}|${r.first?.status||""}|${r.second?.status||""}`,label:"Situação"},
-    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}|${r.tf}|${r.first?.status||""}`,label:"1º colocado"},
-    {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
-    {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
-    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${governorBadge(r,2)}`,value:`${candidateKey(r.second)}|${r.md}|${r.tf}|${r.second?.status||""}`,label:"2º colocado"},
-    {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
-    {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${governorBadge(r,1)}`,value:`${candidateKey(r.first)}|${r.md}|${r.tf}|${r.first?.status||""}`,className:candidateResultClass(governorCandidateState(r,1)),label:"1º colocado"},
+    {html:r.first?party(r.first.party):"—",value:r.first?.party,className:candidateResultClass(governorCandidateState(r,1)),label:"Partido"},
+    {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:`num ${candidateResultClass(governorCandidateState(r,1))}`.trim(),label:"%"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${governorBadge(r,2)}`,value:`${candidateKey(r.second)}|${r.md}|${r.tf}|${r.second?.status||""}`,className:candidateResultClass(governorCandidateState(r,2)),label:"2º colocado"},
+    {html:r.second?party(r.second.party):"—",value:r.second?.party,className:candidateResultClass(governorCandidateState(r,2)),label:"Partido"},
+    {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:`num ${candidateResultClass(governorCandidateState(r,2))}`.trim(),label:"%"},
     {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora da faixa"},
     {html:r.third?party(r.third.party):"—",value:r.third?.party,className:"outside-seat",label:"Partido"},
     {html:r.third?fmtPct(r.third.pct):"—",value:r.third?.pct,className:"num outside-seat",label:"%"},
@@ -354,8 +366,8 @@ function renderStates(){
   $("stateCount").textContent=`${rows.length} ${rows.length===1?"UF":"UFs"}`;
   syncTable("stateBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
-    {html:r.lula?fmtPct(r.lula.pct):"—",value:r.lula?.pct,className:`num ${leaderClass(r.diff,"lula")}`.trim(),label:"Lula"},
-    {html:r.flavio?fmtPct(r.flavio.pct):"—",value:r.flavio?.pct,className:`num ${leaderClass(r.diff,"flavio")}`.trim(),label:"Flávio"},
+    {html:r.lula?`<div class="state-share-bar lula-share" style="--share:${clamp(r.lula.pct,0,100)}%"><span>${fmtPct(r.lula.pct)}</span></div>`:"—",value:r.lula?.pct,className:`num ${leaderClass(r.diff,"lula")}`.trim(),label:"Lula"},
+    {html:r.flavio?`<div class="state-share-bar flavio-share" style="--share:${clamp(r.flavio.pct,0,100)}%"><span>${fmtPct(r.flavio.pct)}</span></div>`:"—",value:r.flavio?.pct,className:`num ${leaderClass(r.diff,"flavio")}`.trim(),label:"Flávio"},
     {html:leaderText(r.diff),value:r.diff,className:`num ${diffClass(r.diff)}`.trim(),label:"Diferença %"},
     {html:leaderVotesText(r.diffVotes),value:r.diffVotes,className:`num ${diffClass(r.diffVotes)}`.trim(),label:"Diferença de votos"},
     {html:fmtPct(r.progress),value:r.progress,className:"num",label:"Seções"}
@@ -366,12 +378,12 @@ function renderSenate(){
   const rows=UFS.map(uf=>({uf,...(model.senate.get(uf)||{first:null,second:null,third:null,gap:null,progress:null})}));
   syncTable("senBody",rows,r=>r.uf,r=>[
     {html:`<strong>${esc(r.uf)}</strong>`,value:r.uf,label:"UF"},
-    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${seatBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito-tse":r.first?.mathGuaranteed?"garantida":"aberta"}`,label:"1º colocado"},
-    {html:r.first?party(r.first.party):"—",value:r.first?.party,label:"Partido"},
-    {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:"num",label:"%"},
-    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${seatBadge(r.second)}`,value:`${candidateKey(r.second)}|${r.second?.elected?"eleito-tse":r.second?.mathGuaranteed?"garantida":"aberta"}`,label:"2º colocado"},
-    {html:r.second?party(r.second.party):"—",value:r.second?.party,label:"Partido"},
-    {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:"num",label:"%"},
+    {html:`<span class="rank-badge">1º</span><span class="mobile-rank">${candidateName(r.first)}</span>${seatBadge(r.first)}`,value:`${candidateKey(r.first)}|${r.first?.elected?"eleito-tse":r.first?.mathGuaranteed?"garantida":"aberta"}`,className:seatResultClass(r.first),label:"1º colocado"},
+    {html:r.first?party(r.first.party):"—",value:r.first?.party,className:seatResultClass(r.first),label:"Partido"},
+    {html:r.first?fmtPct(r.first.pct):"—",value:r.first?.pct,className:`num ${seatResultClass(r.first)}`.trim(),label:"%"},
+    {html:`<span class="rank-badge">2º</span><span class="mobile-rank">${candidateName(r.second)}</span>${seatBadge(r.second)}`,value:`${candidateKey(r.second)}|${r.second?.elected?"eleito-tse":r.second?.mathGuaranteed?"garantida":"aberta"}`,className:seatResultClass(r.second),label:"2º colocado"},
+    {html:r.second?party(r.second.party):"—",value:r.second?.party,className:seatResultClass(r.second),label:"Partido"},
+    {html:r.second?fmtPct(r.second.pct):"—",value:r.second?.pct,className:`num ${seatResultClass(r.second)}`.trim(),label:"%"},
     {html:`<span class="rank-badge outside-rank">3º</span><span class="mobile-rank">${candidateName(r.third)}</span>`,value:candidateKey(r.third),className:"outside-seat",label:"3º colocado · fora das vagas"},
     {html:r.third?party(r.third.party):"—",value:r.third?.party,className:"outside-seat",label:"Partido"},
     {html:r.third?fmtPct(r.third.pct):"—",value:r.third?.pct,className:"num outside-seat",label:"%"},

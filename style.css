@@ -183,3 +183,66 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:
   .governor-status{min-width:0;max-width:150px;white-space:normal;line-height:1.2}
   .elected-badge,.math-badge,.runoff-badge,.math-official-badge{font-size:9px}
 }
+
+
+/* Result-state backgrounds */
+.governor-table td.candidate-elected,.senate-table td.candidate-elected{
+  background:color-mix(in srgb,var(--ok) 14%,var(--card))!important;
+}
+.governor-table td.candidate-runoff{
+  background:color-mix(in srgb,#d9a514 18%,var(--card))!important;
+}
+html[data-theme="dark"] .governor-table td.candidate-runoff{
+  background:color-mix(in srgb,#d9a514 22%,var(--card))!important;
+}
+
+@media(max-width:760px){
+  .state-table tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .state-table td:nth-child(2),.state-table td:nth-child(3){
+    background:var(--card)!important;
+  }
+  .state-share-bar{
+    position:relative;
+    overflow:hidden;
+    isolation:isolate;
+    min-height:28px;
+    display:flex;
+    align-items:center;
+    padding:4px 7px;
+    border-radius:6px;
+    font-weight:850;
+  }
+  .state-share-bar::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:var(--share);
+    z-index:-1;
+    border-radius:5px;
+    transition:width .35s ease;
+  }
+  .state-share-bar.lula-share::before{background:var(--lula-bg)}
+  .state-share-bar.flavio-share::before{background:var(--flavio-bg)}
+  .state-share-bar.lula-share{color:var(--lula-ink)}
+  .state-share-bar.flavio-share{color:var(--flavio-ink)}
+
+  .governor-table td.candidate-elected,.senate-table td.candidate-elected{
+    background:color-mix(in srgb,var(--ok) 15%,var(--card))!important;
+  }
+  .governor-table td.candidate-runoff{
+    background:color-mix(in srgb,#d9a514 20%,var(--card))!important;
+  }
+
+  .governor-table td:nth-child(3).candidate-elected,.governor-table td:nth-child(3).candidate-runoff,
+  .governor-table td:nth-child(6).candidate-elected,.governor-table td:nth-child(6).candidate-runoff,
+  .senate-table td:nth-child(2).candidate-elected,.senate-table td:nth-child(5).candidate-elected{
+    border-radius:7px 0 0 7px;
+    padding-left:7px;
+  }
+  .governor-table td:nth-child(5).candidate-elected,.governor-table td:nth-child(5).candidate-runoff,
+  .governor-table td:nth-child(8).candidate-elected,.governor-table td:nth-child(8).candidate-runoff,
+  .senate-table td:nth-child(4).candidate-elected,.senate-table td:nth-child(7).candidate-elected{
+    border-radius:0 7px 7px 0;
+    padding-right:7px;
+  }
+}

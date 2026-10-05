@@ -49,3 +49,10 @@ O painel exibe, por UF, os três primeiros colocados para Governador logo após 
 - o 3º colocado aparece destacado como fora dessa faixa no momento, com a distância em pontos percentuais para o 2º;
 - o campo oficial `md` do EA20 é usado para mostrar `🔒 Eleito matematicamente` quando `md=e` e `↪ 2º turno definido` quando `md=s`;
 - `✓ Eleito TSE` continua reservado ao campo oficial `cand.e = "s"`.
+
+
+## Encerramento automático do polling
+
+O painel interrompe as consultas automáticas quando Presidente, Governadores e Senado chegam a 100% das seções totalizadas em todas as UFs e três verificações consecutivas não detectam novas alterações. Com intervalo de 15 segundos, isso exige cerca de 45 segundos de estabilidade após a apuração completa.
+
+Após o encerramento, o status passa a indicar `Apuração concluída` e o botão `Verificar agora` continua disponível para uma conferência manual. Se uma conferência manual detectar nova alteração ou algum total voltar a ficar abaixo de 100%, o polling automático é reativado.

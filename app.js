@@ -5,6 +5,7 @@ const CARGO_PRESIDENTE = 1;
 const CARGO_GOVERNADOR = 3;
 const CARGO_SENADOR = 5;
 const POLL_SECONDS = 15;
+const FINAL_STABLE_CHECKS = 3;
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const REGIONS = {
   N:new Set(["AC","AP","AM","PA","RO","RR","TO"]),
@@ -364,9 +365,57 @@ async function incrementalLoad(force=false){
   return changed;
 }
 
-let loading=false,remaining=POLL_SECONDS,paused=false;
+let loading=false,remaining=POLL_SECONDS,paused=false,pollingComplete=false,finalStableChecks=0;
+
+function allTalliesComplete(){
+  if(!model.national || Number(model.national.meta?.progress)<100) return false;
+  for(const uf of UFS){
+    if(Number(model.states.get(uf)?.progress)<100) return false;
+    if(Number(model.governors.get(uf)?.progress)<100) return false;
+    if(Number(model.senate.get(uf)?.progress)<100) return false;
+  }
+  return true;
+}
+function updateCompletionState(changed,{firstRun=false}={}){
+  const complete=allTalliesComplete() && model.errors.length===0;
+  if(!complete){
+    finalStableChecks=0;
+    if(pollingComplete){
+      pollingComplete=false;
+      applyPauseState({announceChange:false});
+    }
+    return false;
+  }
+  if(changed>0 || firstRun){
+    finalStableChecks=0;
+    if(pollingComplete){
+      pollingComplete=false;
+      applyPauseState({announceChange:false});
+    }
+    return false;
+  }
+  if(!pollingComplete) finalStableChecks++;
+  if(finalStableChecks>=FINAL_STABLE_CHECKS){
+    pollingComplete=true;
+    paused=false;
+    applyPauseState({announceChange:false});
+    return true;
+  }
+  return false;
+}
 function applyPauseState({announceChange=true}={}){
   const button=$("pauseUpdates");
+  if(pollingComplete){
+    button.disabled=true;
+    button.setAttribute("aria-pressed","false");
+    button.setAttribute("aria-label","Apuração concluída");
+    button.innerHTML='<span class="control-icon" aria-hidden="true">✓</span><span class="control-label">Concluída</span>';
+    button.title="Apuração concluída; as atualizações automáticas foram encerradas";
+    $("countdown").textContent="concluída";
+    if(!loading) setStatus("ok","Apuração concluída");
+    return;
+  }
+  button.disabled=false;
   button.setAttribute("aria-pressed",String(paused));
   button.setAttribute("aria-label",paused?"Retomar atualizações automáticas":"Pausar atualizações automáticas");
   button.innerHTML=paused?'<span class="control-icon" aria-hidden="true">▶</span><span class="control-label">Retomar</span>':'<span class="control-icon" aria-hidden="true">⏸</span><span class="control-label">Pausar</span>';
@@ -389,9 +438,13 @@ async function load({force=false,manual=false}={}){
   try{
     const changed=model.initialized?await incrementalLoad(force):await initialLoad();
     model.lastQueryAt=new Date(); if(changed>0||!model.lastChangeAt) model.lastChangeAt=new Date();
+    const justCompleted=updateCompletionState(changed,{firstRun});
     const freezeAutomaticResult=paused&&!manual&&!firstRun;
     if(!freezeAutomaticResult) renderAll();
-    if(paused){
+    if(justCompleted){
+      setStatus("ok","Apuração concluída · atualizações automáticas encerradas");
+      announce("Apuração concluída. As atualizações automáticas foram encerradas; o botão Verificar agora continua disponível.");
+    }else if(paused){
       if(manual){ const text=changed>0?`Verificado · ${changed} conjunto(s) alterado(s) · pausado`:"Verificado · sem alteração · pausado"; setStatus("wait",text); announce(text); }
       else setStatus("wait","Atualizações pausadas");
     }else if(firstRun){ setStatus("ok","Dados carregados"); announce("Dados carregados."); }
@@ -439,6 +492,7 @@ function applyTheme(theme){
 $("pollLabel").textContent=POLL_SECONDS;
 initTheme(); initControls(); syncFilterControls(); updateSortIndicators(); applyPauseState({announceChange:false});
 setInterval(()=>{
+  if(pollingComplete){ $("countdown").textContent="concluída"; return; }
   if(paused){ $("countdown").textContent="pausadas"; return; }
   if(!loading) remaining--;
   if(remaining<=0){remaining=POLL_SECONDS;load();}

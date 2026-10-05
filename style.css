@@ -57,3 +57,129 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:
 
 .privacy-note{margin-top:5px;font-size:11px;color:var(--muted-2)}.privacy-note a{color:inherit;text-decoration:underline;text-underline-offset:2px}.privacy-note a:hover{color:var(--accent)}
 .privacy-page{max-width:760px;margin:32px auto;padding:0 22px 48px}.privacy-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)}.privacy-card h1{font-size:22px;margin:0 0 14px}.privacy-card h2{font-size:15px;margin:22px 0 7px}.privacy-card p{color:var(--muted);margin:8px 0}.privacy-back{display:inline-block;margin-bottom:14px;font-size:13px}
+
+
+/* Mobile Phase 1 — structural layout */
+.mobile-nav{display:none}
+.panel{scroll-margin-top:12px}
+
+@media(max-width:760px){
+  .header-wrap{padding-top:9px;padding-bottom:9px}
+  .top{gap:9px}
+  .brand{width:100%;min-width:0}
+  .sub{font-size:11px;margin-top:3px}
+  .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%}
+  .actions .primary-button,.actions .icon-button{width:100%;min-width:0;padding-left:8px;padding-right:8px}
+  .actions .status{grid-column:1/-1;width:100%;min-height:34px;padding:6px 9px;justify-content:center}
+  .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+  .progress-card{grid-column:1/-1}
+  .meta{min-height:56px;padding:8px 10px}
+  .meta .v{font-size:17px}
+  .meta .v.compact{font-size:13px;margin-top:4px}
+
+  .mobile-nav{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;margin:0 0 10px;padding:1px 0 3px}
+  .mobile-nav::-webkit-scrollbar{display:none}
+  .mobile-nav a{flex:0 0 auto;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px;font-weight:750;white-space:nowrap}
+  .mobile-nav a:active{background:var(--accent-2);color:var(--accent)}
+
+  /* Lula x Flávio: replace horizontal table with compact UF cards. */
+  .states-box{max-height:none;overflow:visible}
+  .state-table{min-width:0;white-space:normal}
+  .state-table thead{display:none}
+  .state-table,.state-table tbody,.state-table tr,.state-table td{display:block;width:100%}
+  .state-table tr{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:
+      "uf progress"
+      "lula flavio"
+      "diff diff"
+      "votes votes";
+    gap:6px 8px;
+    margin:0;
+    padding:10px 11px;
+    border-bottom:1px solid var(--line);
+    background:var(--card)
+  }
+  .state-table tr:last-child{border-bottom:0}
+  .state-table td{position:static!important;left:auto!important;border:0;padding:7px 9px;background:var(--card);min-width:0}
+  .state-table td::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:9px;line-height:1.15;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+  .state-table td:nth-child(1){grid-area:uf;padding:2px 0;background:transparent!important;font-size:17px;align-self:center}
+  .state-table td:nth-child(1)::before{display:none}
+  .state-table td:nth-child(2){grid-area:lula;border:1px solid var(--line);border-radius:8px;text-align:left}
+  .state-table td:nth-child(3){grid-area:flavio;border:1px solid var(--line);border-radius:8px;text-align:left}
+  .state-table td:nth-child(4){grid-area:diff;border-radius:8px;text-align:left}
+  .state-table td:nth-child(5){grid-area:votes;border-radius:8px;text-align:left}
+  .state-table td:nth-child(6){grid-area:progress;padding:2px 0;background:transparent!important;text-align:right;align-self:center;font-weight:850}
+  .state-table td:nth-child(6)::before{margin-bottom:0}
+  .state-table .leader-name{white-space:normal}
+
+  /* Governor cards: UF/status header, then one row per ranked candidate. */
+  .governor-table tr{
+    grid-template-columns:minmax(0,1fr) auto auto;
+    gap:0 8px;
+    padding:10px 11px
+  }
+  .governor-table td{min-width:0;padding:7px 0}
+  .governor-table td::before{display:none}
+  .governor-table td:nth-child(1){grid-column:1/2;grid-row:1;font-size:17px;align-self:center}
+  .governor-table td:nth-child(2){grid-column:2/4;grid-row:1;text-align:right;align-self:center}
+  .governor-table td:nth-child(3),.governor-table td:nth-child(4),.governor-table td:nth-child(5){grid-row:2;border-top:1px solid var(--line);margin-top:7px}
+  .governor-table td:nth-child(3){grid-column:1}.governor-table td:nth-child(4){grid-column:2}.governor-table td:nth-child(5){grid-column:3;text-align:right}
+  .governor-table td:nth-child(6),.governor-table td:nth-child(7),.governor-table td:nth-child(8){grid-row:3;border-top:1px solid var(--line)}
+  .governor-table td:nth-child(6){grid-column:1}.governor-table td:nth-child(7){grid-column:2}.governor-table td:nth-child(8){grid-column:3;text-align:right}
+  .governor-table td:nth-child(9),.governor-table td:nth-child(10),.governor-table td:nth-child(11){grid-row:4;margin-top:2px;background:var(--outside-bg)!important;border-radius:0}
+  .governor-table td:nth-child(9){grid-column:1;border-radius:7px 0 0 7px;padding-left:7px}.governor-table td:nth-child(10){grid-column:2}.governor-table td:nth-child(11){grid-column:3;border-radius:0 7px 7px 0;padding-right:7px;text-align:right}
+  .governor-table td:nth-child(12){grid-column:1/2;grid-row:5;margin-top:6px}
+  .governor-table td:nth-child(13){grid-column:2/4;grid-row:5;margin-top:6px;text-align:right}
+  .governor-table td:nth-child(12)::before,.governor-table td:nth-child(13)::before{display:block}
+  .governor-table .mobile-rank{white-space:normal}
+
+  /* Senate cards: one compact row for each of the three candidates. */
+  .senate-table tr{
+    grid-template-columns:minmax(0,1fr) auto auto;
+    gap:0 8px;
+    padding:10px 11px
+  }
+  .senate-table td{min-width:0;padding:7px 0}
+  .senate-table td::before{display:none}
+  .senate-table td:nth-child(1){grid-column:1/4;grid-row:1;font-size:17px}
+  .senate-table td:nth-child(2),.senate-table td:nth-child(3),.senate-table td:nth-child(4){grid-row:2;border-top:1px solid var(--line);margin-top:7px}
+  .senate-table td:nth-child(2){grid-column:1}.senate-table td:nth-child(3){grid-column:2}.senate-table td:nth-child(4){grid-column:3;text-align:right}
+  .senate-table td:nth-child(5),.senate-table td:nth-child(6),.senate-table td:nth-child(7){grid-row:3;border-top:1px solid var(--line)}
+  .senate-table td:nth-child(5){grid-column:1}.senate-table td:nth-child(6){grid-column:2}.senate-table td:nth-child(7){grid-column:3;text-align:right}
+  .senate-table td:nth-child(8),.senate-table td:nth-child(9),.senate-table td:nth-child(10){grid-row:4;margin-top:2px;background:var(--outside-bg)!important;border-radius:0}
+  .senate-table td:nth-child(8){grid-column:1;border-radius:7px 0 0 7px;padding-left:7px}.senate-table td:nth-child(9){grid-column:2}.senate-table td:nth-child(10){grid-column:3;border-radius:0 7px 7px 0;padding-right:7px;text-align:right}
+  .senate-table td:nth-child(11){grid-column:1/2;grid-row:5;margin-top:6px}
+  .senate-table td:nth-child(12){grid-column:2/4;grid-row:5;margin-top:6px;text-align:right}
+  .senate-table td:nth-child(11)::before,.senate-table td:nth-child(12)::before{display:block}
+  .senate-table .mobile-rank{white-space:normal}
+
+  .governor-table .party,.senate-table .party{min-width:40px;padding-left:6px;padding-right:6px}
+  .governor-table .elected-badge,.governor-table .math-official-badge,.governor-table .runoff-badge,
+  .senate-table .elected-badge,.senate-table .math-badge{margin-left:5px;white-space:nowrap}
+}
+
+@media(max-width:480px){
+  .site-header .sub{display:none}
+  .header-wrap{padding-top:7px;padding-bottom:7px}
+  .eyebrow{margin-bottom:1px}
+  h1{font-size:20px}
+  .actions{margin-top:1px}
+  .actions .primary-button,.actions .icon-button{min-height:36px;font-size:12px}
+  .actions .status{font-size:11px}
+  .meta-grid{grid-template-columns:1fr 1fr}
+  .meta-grid .meta:nth-child(2){display:none}
+  .meta-grid .progress-card{grid-column:1/-1}
+  .meta{min-height:0}
+  .meta .k{font-size:9px}
+  .meta .v.compact{font-size:12px}
+  main{padding-top:10px}
+  .section-head{padding:11px 12px}
+  .section-head h2{font-size:15px}
+  .section-note{font-size:11px}
+  .panel{margin-bottom:12px}
+  .state-table tr,.governor-table tr,.senate-table tr{padding-left:9px;padding-right:9px}
+  .governor-status{min-width:0;max-width:150px;white-space:normal;line-height:1.2}
+  .elected-badge,.math-badge,.runoff-badge,.math-official-badge{font-size:9px}
+}

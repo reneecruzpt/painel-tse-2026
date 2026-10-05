@@ -368,11 +368,12 @@ async function incrementalLoad(force=false){
 let loading=false,remaining=POLL_SECONDS,paused=false,pollingComplete=false,finalStableChecks=0;
 
 function allTalliesComplete(){
-  if(!model.national || Number(model.national.meta?.progress)<100) return false;
+  const isComplete=v=>Number.isFinite(Number(v))&&Number(v)>=100;
+  if(!model.national || !isComplete(model.national.meta?.progress)) return false;
   for(const uf of UFS){
-    if(Number(model.states.get(uf)?.progress)<100) return false;
-    if(Number(model.governors.get(uf)?.progress)<100) return false;
-    if(Number(model.senate.get(uf)?.progress)<100) return false;
+    if(!isComplete(model.states.get(uf)?.progress)) return false;
+    if(!isComplete(model.governors.get(uf)?.progress)) return false;
+    if(!isComplete(model.senate.get(uf)?.progress)) return false;
   }
   return true;
 }

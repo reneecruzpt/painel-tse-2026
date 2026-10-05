@@ -295,3 +295,41 @@ html[data-theme="dark"] .governor-table td.candidate-runoff{
     min-height:38px;
   }
 }
+
+
+/* Mobile tab navigation */
+.mobile-tab-panel[hidden]{display:none!important}
+
+@media(max-width:760px){
+  .mobile-nav{
+    position:sticky;
+    top:0;
+    z-index:15;
+    margin:0 -11px 10px;
+    padding:8px 11px;
+    background:color-mix(in srgb,var(--bg) 96%,transparent);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(10px);
+  }
+  .mobile-nav .mobile-tab{
+    min-height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .mobile-nav .mobile-tab[aria-selected="true"]{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--card);
+  }
+  .mobile-tab-panel{
+    margin-bottom:12px;
+  }
+  .section-filter{
+    top:53px;
+  }
+}
+
+@media(min-width:761px){
+  .mobile-tab-panel[hidden]{display:block!important}
+}

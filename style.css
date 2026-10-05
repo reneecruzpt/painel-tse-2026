@@ -440,3 +440,261 @@ html[data-theme="dark"] .governor-table td.candidate-runoff{
     grid-column:1/-1;
   }
 }
+
+
+/* Mobile Phase 3 — polish and overflow hardening */
+:root{
+  --result-elected-bg:#edf8f1;
+  --result-elected-ink:#145a3a;
+  --result-runoff-bg:#fff7d6;
+  --result-runoff-ink:#755500;
+  --result-runoff-line:#e8cf74;
+}
+html[data-theme="dark"]{
+  --result-elected-bg:#173729;
+  --result-elected-ink:#a9e8bf;
+  --result-runoff-bg:#403617;
+  --result-runoff-ink:#f2d77b;
+  --result-runoff-line:#74642a;
+}
+
+body{overflow-x:hidden}
+main,.panel,.section-head>*,.filters,.filter-group,.actions>*{min-width:0}
+select{max-width:100%}
+
+/* Make result colors consistent in light/dark themes. */
+.governor-table td.candidate-elected,.senate-table td.candidate-elected{
+  background:var(--result-elected-bg)!important;
+  color:var(--result-elected-ink);
+}
+.governor-table td.candidate-runoff{
+  background:var(--result-runoff-bg)!important;
+  color:var(--result-runoff-ink);
+}
+.runoff-badge,.governor-status.runoff{
+  background:var(--result-runoff-bg);
+  border-color:var(--result-runoff-line);
+  color:var(--result-runoff-ink);
+}
+.elected-badge,.governor-status.decided{
+  background:var(--result-elected-bg);
+  color:var(--result-elected-ink);
+}
+
+/* Long names and multiple badges must wrap instead of widening the page. */
+.mobile-rank,.section-note,.status,.meta .v,.candidate-name{
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.elected-badge,.math-badge,.runoff-badge,.math-official-badge,.governor-status{
+  max-width:100%;
+  white-space:normal;
+  text-align:center;
+  line-height:1.2;
+}
+
+@media(max-width:760px){
+  body{font-size:13.5px}
+  main{width:100%;max-width:100%;overflow-x:clip}
+  .panel{width:100%;max-width:100%}
+  .section-head{gap:8px;padding:11px 12px}
+  .section-head h2{font-size:15px;line-height:1.25}
+  .section-note{font-size:11px;line-height:1.4;margin-top:4px}
+
+  .mobile-nav{
+    max-width:calc(100vw - 0px);
+  }
+
+  .state-table,.governor-table,.senate-table{
+    max-width:100%;
+  }
+  .state-table td,.governor-table td,.senate-table td{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .state-share-bar{min-width:0}
+  .state-share-bar span{white-space:nowrap}
+  .leader-name{max-width:100%;overflow-wrap:anywhere}
+
+  .governor-table tr,.senate-table tr{
+    grid-template-columns:minmax(0,1fr) minmax(42px,auto) minmax(50px,auto);
+    column-gap:6px;
+  }
+  .governor-table td:nth-child(3),.governor-table td:nth-child(6),
+  .senate-table td:nth-child(2),.senate-table td:nth-child(5){
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:5px;
+  }
+  .governor-table td:nth-child(3) .rank-badge,.governor-table td:nth-child(6) .rank-badge,
+  .senate-table td:nth-child(2) .rank-badge,.senate-table td:nth-child(5) .rank-badge{
+    flex:0 0 auto;
+    margin-right:0;
+  }
+  .governor-table td:nth-child(3) .mobile-rank,.governor-table td:nth-child(6) .mobile-rank,
+  .senate-table td:nth-child(2) .mobile-rank,.senate-table td:nth-child(5) .mobile-rank{
+    flex:1 1 120px;
+    min-width:0;
+  }
+  .governor-table td:nth-child(3) .elected-badge,.governor-table td:nth-child(3) .runoff-badge,
+  .governor-table td:nth-child(6) .elected-badge,.governor-table td:nth-child(6) .runoff-badge,
+  .senate-table td:nth-child(2) .elected-badge,.senate-table td:nth-child(2) .math-badge,
+  .senate-table td:nth-child(5) .elected-badge,.senate-table td:nth-child(5) .math-badge{
+    flex:0 1 auto;
+    margin-left:0;
+  }
+
+  .governor-table .party,.senate-table .party{
+    max-width:100%;
+    min-width:0;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+  .governor-table td.num,.senate-table td.num{white-space:nowrap}
+
+  /* Re-apply themed result backgrounds after legacy mobile transparent rules. */
+  .governor-table td.candidate-elected,.senate-table td.candidate-elected{
+    background:var(--result-elected-bg)!important;
+  }
+  .governor-table td.candidate-runoff{
+    background:var(--result-runoff-bg)!important;
+  }
+
+  .section-filter,.mobile-sort-controls,.filters{
+    max-width:100%;
+  }
+}
+
+@media(max-width:480px){
+  .wrap,main{padding-left:8px;padding-right:8px}
+  .header-wrap{padding-top:7px;padding-bottom:8px}
+  .actions{gap:5px}
+  .actions .primary-button,.actions .icon-button{
+    padding-left:6px;padding-right:6px;font-size:11.5px;
+  }
+  .actions .status{
+    font-size:10.5px;
+    line-height:1.3;
+    padding-left:7px;
+    padding-right:7px;
+  }
+
+  .mobile-nav{
+    margin-left:-8px;
+    margin-right:-8px;
+    padding-left:8px;
+    padding-right:8px;
+    gap:5px;
+  }
+  .mobile-nav .mobile-tab{
+    font-size:11.5px;
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .section-head{padding:10px}
+  .filters,.mobile-sort-controls,.section-filter{padding-left:9px;padding-right:9px}
+
+  .state-table tr,.governor-table tr,.senate-table tr{
+    padding:9px 8px;
+  }
+  .state-table td{padding:6px 7px}
+  .state-table td:nth-child(1){font-size:16px}
+  .state-table td:nth-child(6){font-size:12px}
+  .state-share-bar{min-height:27px;padding:3px 6px}
+
+  .governor-table tr,.senate-table tr{
+    grid-template-columns:minmax(0,1fr) minmax(38px,auto) minmax(46px,auto);
+    column-gap:5px;
+  }
+  .governor-table .mobile-rank,.senate-table .mobile-rank{
+    font-size:12.5px;
+    line-height:1.25;
+  }
+  .rank-badge{
+    min-width:23px;
+    height:21px;
+    font-size:9px;
+  }
+  .party{font-size:9.5px;padding:2px 5px}
+  .elected-badge,.math-badge,.runoff-badge,.math-official-badge{
+    font-size:8.5px;
+    padding:2px 5px;
+  }
+
+  /* President becomes a compact card list on narrow phones. */
+  .president-table{
+    white-space:normal;
+  }
+  .president-table thead{display:none}
+  .president-table,.president-table tbody,.president-table tr,.president-table td{
+    display:block;
+    width:100%;
+  }
+  .president-table tr{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:
+      "candidate pct"
+      "party votes";
+    gap:5px 8px;
+    padding:9px 10px;
+    border-bottom:1px solid var(--line);
+    background:var(--card);
+  }
+  .president-table tr:last-child{border-bottom:0}
+  .president-table td{
+    border:0;
+    padding:2px 0;
+    min-width:0;
+    background:transparent;
+  }
+  .president-table td::before{
+    content:attr(data-label);
+    display:block;
+    margin-bottom:1px;
+    font-size:8.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--muted);
+    font-weight:800;
+  }
+  .president-table td:nth-child(1){grid-area:candidate;overflow-wrap:anywhere}
+  .president-table td:nth-child(2){grid-area:party}
+  .president-table td:nth-child(3){grid-area:votes;text-align:right}
+  .president-table td:nth-child(4){grid-area:pct;text-align:right}
+  .president-table .pct-wrap{
+    min-width:90px;
+    height:26px;
+  }
+}
+
+@media(max-width:360px){
+  .meta-grid{gap:5px}
+  .meta{padding:7px 8px}
+  .meta .v{font-size:16px}
+  .meta .v.compact{font-size:11px}
+
+  .mobile-nav .mobile-tab{
+    font-size:11px;
+    padding-left:9px;
+    padding-right:9px;
+  }
+
+  .highlight-filter-group .chip{
+    font-size:11px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .highlight-filter-group .text-button{
+    padding-left:5px;
+    padding-right:5px;
+  }
+
+  .governor-table tr,.senate-table tr{
+    grid-template-columns:minmax(0,1fr) 38px 46px;
+  }
+  .governor-status{font-size:8.5px}
+}

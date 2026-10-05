@@ -5,8 +5,9 @@ Painel estático para acompanhar resultados oficiais das Eleições 2026 diretam
 ## Visões
 
 - Presidente — cenário geral: Lula, Flávio Bolsonaro e todos os demais candidatos acima de 1% dos votos válidos.
-- Lula × Flávio por UF, com destaque visual do líder, diferença nominal, filtros por região e ordenação.
-- Senado — 1º e 2º colocados por UF, com partido e percentual.
+- Lula × Flávio por UF, com destaque visual do líder, diferença percentual e absoluta de votos, filtros por região e ordenação.
+- Governadores — 1º, 2º e 3º colocados por UF, com situação oficial da totalização.
+- Senado — 1º, 2º e 3º colocados por UF, com partido, percentual e distância do 3º para a faixa das vagas.
 
 ## Interface
 
@@ -54,6 +55,18 @@ O painel exibe, por UF, os três primeiros colocados para Governador logo após 
 
 ## Encerramento automático do polling
 
-O painel interrompe as consultas automáticas quando Presidente, Governadores e Senado chegam a 100% das seções totalizadas em todas as UFs e três verificações consecutivas não detectam novas alterações. Com intervalo de 15 segundos, isso exige cerca de 45 segundos de estabilidade após a apuração completa.
+O painel interrompe as consultas automáticas somente quando a apuração relevante chegou a 100% e a totalização final oficial foi registrada pelo TSE (`tf=s`): no arquivo nacional para Presidente e nos arquivos estaduais de Governador e Senado. Depois disso, ainda são exigidas três verificações consecutivas sem alterações. Com intervalo de 15 segundos, isso representa cerca de 45 segundos adicionais de estabilidade.
 
 Após o encerramento, o status passa a indicar `Apuração concluída` e o botão `Verificar agora` continua disponível para uma conferência manual. Se uma conferência manual detectar nova alteração ou algum total voltar a ficar abaixo de 100%, o polling automático é reativado.
+
+
+## Percentuais e ordenação dos candidatos
+
+Para os cargos majoritários, o painel calcula o percentual exibido sobre os votos válidos do cargo (`v.vv`). Um candidato só entra nesse cálculo quando a destinação de seus votos (`cand.dvt`) é válida. O percentual oficial `cand.pvap/pvapn` tem como denominador os votos a votáveis concorrentes (`v.vvc`), que também podem incluir votos anulados ou anulados sub judice.
+
+A classificação de candidatos segue prioritariamente `cand.seq`, o sequencial de ordenação fornecido pelo TSE. Votos e percentual são usados apenas como critério de fallback caso o sequencial não esteja disponível.
+
+
+## Recuperação de falhas
+
+Se uma consulta de UF falhar na carga inicial, ela permanece na fila de atualização. O painel tenta novamente nos ciclos seguintes em vez de considerar aquela UF definitivamente carregada.
